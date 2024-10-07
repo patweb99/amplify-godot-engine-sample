@@ -67,7 +67,12 @@ func _physics_process(delta):
 
 func die():
 	hit.emit()
+	var score_label = $"../UserInterface/ScoreLabel"
+	var current_score = score_label.score
+	var username = await AWSAmplify.auth.get_user_attribute("preferred_username")
+	await AWSAmplify.data.mutate("{ createLeaderboard(input: {score: " + str(current_score) + ", username: \"" + username + "\"}) { id } }", "DataMutation")
 	queue_free()
+	get_tree().change_scene_to_file("res://Leaderboard.tscn")
 
 
 func _on_MobDetector_body_entered(_body):

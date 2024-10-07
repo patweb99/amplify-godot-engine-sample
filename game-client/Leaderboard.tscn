@@ -1,0 +1,38 @@
+[gd_scene load_steps=2 format=3 uid="uid://b2s50kusrt8tg"]
+
+[ext_resource type="Script" path="res://Leaderboard.gd" id="1_mrb81"]
+
+[node name="Leaderboard" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mrb81")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 314.0
+offset_top = 3.0
+offset_right = 900.0
+offset_bottom = 649.0
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Leaderboard"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 414.0
+offset_top = 587.0
+offset_right = 807.0
+offset_bottom = 610.0
+theme_override_font_sizes/font_size = 32
+text = "Press enter to replay"
+horizontal_alignment = 1
