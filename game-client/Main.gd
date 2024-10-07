@@ -5,6 +5,9 @@ extends Node
 
 func _ready():
 	$UserInterface/Retry.hide()
+	var username = AWSAmplify.auth.get_user_attribute("preferred_username")
+	if username:
+		$UserInterface/UsernameLabel.text = username
 
 
 func _unhandled_input(event):
