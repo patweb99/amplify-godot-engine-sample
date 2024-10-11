@@ -1,6 +1,6 @@
 ## AWS Amplify for Godot Engine - Sample
 
-This project is a sample made from [Amplfy Godot Engine Template](https://github.com/aws-samples/amplify-godot-engine-template.git) repository.
+This project is a sample made from [Amplify Godot Engine Template](https://github.com/aws-samples/amplify-godot-engine-template.git) repository.
 
 It uses a sample game named [Squash The Creeps](https://github.com/godotengine/godot-demo-projects/tree/master/3d/squash_the_creeps) from the [Godot Demo Projects](https://github.com/godotengine/godot-demo-projects). You can learn how to build this game from scratch in the [Godot Documentation](https://docs.godotengine.org) in the [Your first 3D game](https://docs.godotengine.org/en/stable/getting_started/first_3d_game/index.html) section.
 
