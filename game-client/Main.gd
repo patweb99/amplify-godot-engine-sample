@@ -1,11 +1,17 @@
 extends Node
 
+@onready var auth_form: AuthForm = $AuthForm
+@onready var retry: ColorRect = $Retry
+
 @export var mob_scene: PackedScene
 
-
 func _ready():
-	$UserInterface/Retry.hide()
+	auth_form.show()
+	retry.hide()
 
+func _on_user_connected(user):
+	#TODO
+	pass
 
 func _unhandled_input(event):
 	if event.is_action_pressed("ui_accept") and $UserInterface/Retry.visible:
@@ -33,4 +39,4 @@ func _on_mob_timer_timeout():
 
 func _on_player_hit():
 	$MobTimer.stop()
-	$UserInterface/Retry.show()
+	$Retry.show()
