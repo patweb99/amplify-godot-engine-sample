@@ -3,12 +3,12 @@ class_name AWSAmplifyData
 
 const CONFIG_URL = "url"
 
-var client: AWSAmplifyClient
+var auth: AWSAmplifyAuth
 var config: Dictionary
 var endpoint: String
 
-func _init(_client: AWSAmplifyClient, _config: Dictionary) -> void:
-	client = _client
+func _init(_auth: AWSAmplifyAuth, _config: Dictionary) -> void:
+	auth = _auth
 	config = _config
 	endpoint = config[CONFIG_URL]
 
@@ -23,7 +23,7 @@ func mutate(query, operation_name):
 		"operationName": operation_name
 	})
 	
-	return await client.make_authenticated_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	return await auth.make_authenticated_request(endpoint, headers, HTTPClient.METHOD_POST, body)
 
 func query(query, operation_name):
 	var headers = [
@@ -36,4 +36,4 @@ func query(query, operation_name):
 		"operationName": operation_name
 	})
 	
-	return await client.make_authenticated_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	return await auth.make_authenticated_request(endpoint, headers, HTTPClient.METHOD_POST, body)

@@ -1,121 +1,226 @@
 extends Node
 class_name AWSAmplifyAuth
 
-const CONFIG_REGION = "aws_region"
-const CONFIG_CLIENT_ID = "user_pool_client_id"
+class CONFIG:
+	const REGION = "aws_region"
+	const CLIENT_ID = "user_pool_client_id"
 
-const BODY_USER_ATTRIBUTES = "UserAttributes"
-const BODY_AUTHENTICATED_RESULT = "AuthenticationResult"
-const BODY_ACCESS_TOKEN = "AccessToken"
-const BODY_REFRESH_TOKEN = "RefreshToken"
+class HEADERS:
+	const CONTENT_TYPE = "Content-Type: application/x-amz-json-1.1"
+	static func X_AMZ_TARGET(target) -> String:
+		return "X-Amz-Target: AWSCognitoIdentityProviderService." + target
+	static func AUTHORIZATION_BEARER(access_token) -> String:
+		return "Authorization: Bearer" + access_token
 
-const DEFAULT_TOKEN_TIMEOUT = 120
+class BODY:
+	const CLIENT_ID = "ClientId"
+	const AUTH_FLOW = "AuthFlow"
+	const AUTH_PARAMETERS = "AuthParameters"
+	const USERNAME = "Username"
+	const PASSWORD = "Password"
+	const CONFIRMATION_CODE = "ConfirmationCode"
+	const USER_ATTRIBUTES = "UserAttributes"
+	const AUTHENTICATED_RESULT = "AuthenticationResult"
+	const ACCESS_TOKEN = "AccessToken"
+	const REFRESH_TOKEN = "RefreshToken"
+
+class TOKEN:
+	const ACCESS_TOKEN = "AccessToken"
+	const ACCESS_TOKEN_EXPIRATION_TIME = "AccessTokenExpirationTime"
+	const REFRESH_TOKEN = "RefreshToken"	
+
+class USER:
+	const EMail = "Email"
 
 var client: AWSAmplifyClient
 var config: Dictionary
 var endpoint: String
 var client_id: String
-var token_timeout = 120
 
-var access_token
-var refresh_token
-var current_user
+var tokens: Dictionary
+var user_attributes: Dictionary
 
-signal user_connected
-signal user_disconnected
+signal user_signed_in
+signal user_refreshed
+signal user_signed_out
+signal user_signed_up
 
-func _init(_client: AWSAmplifyClient, _config: Dictionary, _token_timeout = DEFAULT_TOKEN_TIMEOUT) -> void:
+func _init(_client: AWSAmplifyClient, _config: Dictionary) -> void:
 	client = _client
 	config = _config
-	client_id = config[CONFIG_CLIENT_ID]
-	endpoint = "https://cognito-idp." + config[CONFIG_REGION] + ".amazonaws.com/"
-	token_timeout = _token_timeout
+	client_id = config[CONFIG.CLIENT_ID]
+	endpoint = "https://cognito-idp." + config[CONFIG.REGION] + ".amazonaws.com/"
+	tokens = {}
+	user_attributes = {}
+
+func is_user_signed_in():
+	return tokens[TOKEN.ACCESS_TOKEN] != null && _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN]) < Time.get_unix_time_from_system()
+
+func get_user_attributes(refresh_attributes = false):
+	refresh_user(refresh_attributes)
+	return user_attributes
+	
+func get_user_access_token_expiration_time() -> int:
+	if tokens.has(TOKEN.ACCESS_TOKEN):
+		return _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN])
+	else:
+		return Time.get_unix_time_from_system()
+	
+func add_user_attributes(_user_attributes: Dictionary = {}):
+	var attributes = user_attributes
+	attributes.merge(_user_attributes)
+	update_user_attributes(attributes)
+	
+func remove_user_attributes(keys: Array):
+	var attributes = user_attributes
+	for key in user_attributes.keys():
+		if not keys.has(key):
+			attributes[key] = user_attributes[key]
+	update_user_attributes(attributes)
+
+func update_user_attributes(_user_attributes: Dictionary = {}):
+	var attributes = _user_attributes
+	for key in attributes.keys():
+		attributes.append({
+			"Name": key,
+			"Value": attributes[key]
+		})
+	
+	var headers = [
+		HEADERS.X_AMZ_TARGET("UpdateUserAttributes"),
+		HEADERS.CONTENT_TYPE
+	]
+	
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.USER_ATTRIBUTES: attributes
+	}
+	
+	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	if response.success:
+		user_attributes = _user_attributes
+		user_refreshed.emit(user_attributes)
+	return response
+
+func refresh_user(refresh_access_token = false, refresh_attributes = false):
+	if tokens[TOKEN.ACCESS_TOKEN]:
+		# refresh user access token if user access token has expired
+		if refresh_access_token or (tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] > Time.get_unix_time_from_system() and tokens[TOKEN.REFRESH_TOKEN]):
+			var response = await _refresh_user_access_token(tokens[TOKEN.REFRESH_TOKEN])
+			if not response.success:
+				_clean_tokens()
+		else:
+			_clean_tokens()
+		
+		# refresh user attributes
+		if refresh_attributes:
+			var response = await _refresh_user_attributes(tokens[TOKEN.ACCESS_TOKEN])
+			if response.success:
+				user_refreshed.emit(user_attributes)
+			else:
+				_clean_tokens()
+		else:
+			user_refreshed.emit(user_attributes)
+			
+	else:
+		_clear_user_attributes()
 
 func sign_in_with_user_password(email, password):
 	var headers = [
-		"X-Amz-Target: AWSCognitoIdentityProviderService.InitiateAuth",
-		"Content-Type: application/x-amz-json-1.1"
+		HEADERS.X_AMZ_TARGET("InitiateAuth"),
+		HEADERS.CONTENT_TYPE
 	]
 	
-	var body = JSON.stringify({
-		"AuthFlow": "USER_PASSWORD_AUTH",
-		"ClientId": client_id,
-		"AuthParameters": {
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.AUTH_FLOW: "USER_PASSWORD_AUTH",
+		BODY.AUTH_PARAMETERS: {
 			"USERNAME": email,
 			"PASSWORD": password
 		}
-	})
-	
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	}
+
+	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 	if response.success:
+		user_attributes = {}
+		user_attributes[USER.EMail] = email
+		
 		var response_body = response.response_body
-		if response_body.has(BODY_AUTHENTICATED_RESULT) and response_body[BODY_AUTHENTICATED_RESULT].has(BODY_ACCESS_TOKEN):
+		if response_body.has(BODY.AUTHENTICATED_RESULT) and response_body[BODY.AUTHENTICATED_RESULT].has(BODY.ACCESS_TOKEN):
 			
-			var authenticated_body = response_body[BODY_AUTHENTICATED_RESULT]
-			access_token = authenticated_body[BODY_ACCESS_TOKEN]
-			refresh_token = authenticated_body[BODY_REFRESH_TOKEN]
+			var authenticated_result = response_body[BODY.AUTHENTICATED_RESULT]
+			tokens[TOKEN.ACCESS_TOKEN] = authenticated_result[BODY.ACCESS_TOKEN]
+			tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] = _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN])
+			tokens[TOKEN.REFRESH_TOKEN] = authenticated_result[BODY.REFRESH_TOKEN]
 			
-			var user = await get_current_user()
-			if !user:
-				return false
-			current_user = user
-			user_connected.emit(current_user)
-			return response
+			var refresh_user_attributes_response = await _refresh_user_attributes(tokens[TOKEN.ACCESS_TOKEN])
+			if refresh_user_attributes_response.success:
+				user_signed_in.emit(user_attributes)
+			else:
+				_clear_user_attributes()
+			return refresh_user_attributes_response
 		
 	return response
-	
+
 func forgot_password(email):
-	
 	var headers = [
-		"X-Amz-Target: AWSCognitoIdentityProviderService.ForgotPassword",
-		"Content-Type: application/x-amz-json-1.1"
+		HEADERS.X_AMZ_TARGET("ForgotPassword"),
+		HEADERS.CONTENT_TYPE
 	]
 
-	var parameters = {
-		"Username": email,
-		"ClientId": client_id
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.USERNAME: email
 	}
 
-	var body = JSON.stringify(parameters)
-	
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 
 func forgot_password_confirm_code(email, confirmation_code, new_password):
-	
 	var headers = [
-		"X-Amz-Target: AWSCognitoIdentityProviderService.ConfirmForgotPassword",
-		"Content-Type: application/x-amz-json-1.1"
+		HEADERS.X_AMZ_TARGET("ConfirmForgotPassword"),
+		HEADERS.CONTENT_TYPE
 	]
 
-	var parameters = {
-		"Username": email,
-		"ClientId": client_id,
-		"ConfirmationCode": confirmation_code,
-		"Password": new_password
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.USERNAME: email,
+		BODY.CONFIRMATION_CODE: confirmation_code,
+		BODY.PASSWORD: new_password
 	}
 
-	var body = JSON.stringify(parameters)
-	
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 
-func sign_out():
-	user_disconnected.emit(current_user)
-	return true
+func global_sign_out():
+	var headers = [
+		HEADERS.X_AMZ_TARGET("GlobalSignOut"),
+		HEADERS.CONTENT_TYPE
+	]
+
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.ACCESS_TOKEN: tokens[TOKEN.ACCESS_TOKEN]
+	}
+	
+	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	if response.success:
+		user_signed_out.emit(user_attributes)
+		_clean_tokens()
+	return response
 	
 func sign_up(email, password, options = {}):
 	var headers = [
-		"X-Amz-Target: AWSCognitoIdentityProviderService.SignUp",
-		"Content-Type: application/x-amz-json-1.1"
+		HEADERS.X_AMZ_TARGET("SignUp"),
+		HEADERS.CONTENT_TYPE
 	]
 
-	var parameters = {
-		"Username": email,
-		"Password": password,
-		"ClientId": client_id
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.USERNAME: email,
+		BODY.PASSWORD: password
 	}
 
 	if !options.is_empty() && options.has("userAttributes"):
-		var userAttributes = options.userAttributes
+		var userAttributes = options["userAttributes"]
 		var userAttributesArray = []
 
 		for key in userAttributes:
@@ -124,139 +229,98 @@ func sign_up(email, password, options = {}):
 				"Value": userAttributes[key]
 			})
 
-		parameters[BODY_USER_ATTRIBUTES] = userAttributesArray
+		body[BODY.USER_ATTRIBUTES] = userAttributesArray
 	
-	var body = JSON.stringify(parameters)
-	
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	if response.success:
+		user_signed_up.emit()
+	return response
 
 func sign_up_confirm_code(email, confirmation_code):
-	
 	var headers = [
-		"X-Amz-Target: AWSCognitoIdentityProviderService.ConfirmSignUp",
-		"Content-Type: application/x-amz-json-1.1"
+		HEADERS.X_AMZ_TARGET("ConfirmSignUp"),
+		HEADERS.CONTENT_TYPE
 	]
 
-	var parameters = {
-		"Username": email,
-		"ClientId": client_id,
-		"ConfirmationCode": confirmation_code
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.USERNAME: email,
+		BODY.CONFIRMATION_CODE: confirmation_code
 	}
 
-	var body = JSON.stringify(parameters)
-	
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 
 func sign_up_resend_code(email):
-	
 	var headers = [
-		"X-Amz-Target: AWSCognitoIdentityProviderService.ResendConfirmationCode",
-		"Content-Type: application/x-amz-json-1.1"
+		HEADERS.X_AMZ_TARGET("ResendConfirmationCode"),
+		HEADERS.CONTENT_TYPE
 	]
 
-	var parameters = {
-		"Username": email,
-		"ClientId": client_id
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.USERNAME: email
 	}
-
-	var body = JSON.stringify(parameters)
 	
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 
+func make_authenticated_request(endpoint, headers, method, body):
+	refresh_user(false)
+	headers.append(HEADERS.AUTHORIZATION_BEARER(tokens[TOKEN.ACCESS_TOKEN]))
+	return await client.make_request(endpoint, headers, method, body)
 
-func refresh_access_token():
-	
-	if !refresh_token || refresh_token == '':
-		return false
-	
+func _refresh_user_access_token(refresh_token):
 	var headers = [
-		"X-Amz-Target: AWSCognitoIdentityProviderService.InitiateAuth",
-		"Content-Type: application/x-amz-json-1.1"
+		HEADERS.X_AMZ_TARGET("InitiateAuth"),
+		HEADERS.CONTENT_TYPE
 	]
 	
-	var body = JSON.stringify({
-		"AuthFlow": "REFRESH_TOKEN_AUTH",
-		"ClientId": client_id,
-		"AuthParameters": {
+	var body = {
+		BODY.CLIENT_ID: client_id,
+		BODY.AUTH_FLOW:"REFRESH_TOKEN_AUTH",
+		BODY.AUTH_PARAMETERS: {
 			"REFRESH_TOKEN": refresh_token
 		}
-	})
+	}
 	
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 	var response_body = response.response_body
-	if response_body.has(BODY_AUTHENTICATED_RESULT) and response_body.AuthenticationResult.has(BODY_ACCESS_TOKEN):
-		access_token = response_body[BODY_AUTHENTICATED_RESULT][BODY_ACCESS_TOKEN]
-
+	if response_body.has(BODY.AUTHENTICATED_RESULT) and response_body[BODY.AUTHENTICATED_RESULT].has(BODY.ACCESS_TOKEN):
+		tokens[TOKEN.ACCESS_TOKEN] = response_body[BODY.AUTHENTICATED_RESULT][BODY.ACCESS_TOKEN]
+		tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] = _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN])
 	return response
 	
-	
-func get_current_user():
-	
-	if current_user:
-		return current_user
-		
-	#Add an token helper function to verify there is a token
-	
+func _refresh_user_attributes(access_token):
 	var headers = [
-		"X-Amz-Target: AWSCognitoIdentityProviderService.GetUser",
-		"Content-Type: application/x-amz-json-1.1"
+		HEADERS.X_AMZ_TARGET("GetUser"),
+		HEADERS.CONTENT_TYPE
 	]
 	
-	var body = JSON.stringify({
-		BODY_ACCESS_TOKEN: access_token,
-	})
+	var body = {
+		BODY.ACCESS_TOKEN: access_token,
+	}
 
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, body)
-	var response_body = response.response_body
-	
-	if response_body.has(BODY_USER_ATTRIBUTES):
-		var user_attributes = response_body[BODY_USER_ATTRIBUTES]
-		
+	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	if response.success:
+		var user_attributes = response.response_body[BODY.USER_ATTRIBUTES]
 		var user = {}
-		for item in user_attributes: # create util function for this?
-			user[item.Name] = item.Value
-		user.Username = response_body.Username
-		return user
-		
-	return false
-	
-func get_user_attribute(attribute):
-	if current_user == null:
-		print("No current user")
-		return null
-	
-	if not current_user.has(attribute):
-		print("User does not have attribute attribute")
-		return null
-	
-	var attribute_value = current_user[attribute]
-	if attribute_value == null:
-		print("attribute is null")
-		return null
-	
-	return attribute_value
-	
-func handle_authentication():
-	if !refresh_token || refresh_token == '':
-		return {"success": false, "message": "User in not authenticated"}
-	
-	if !access_token || access_token == '':
-		print("refreshing access token 1")
-		var success = await refresh_access_token()
-		if !success:
-			return {"success": false, "message": "Couldn't retrieve refresh token"}
-		
-	var expiration_delay = get_token_expiration_delay(access_token)
-	print("token expiring in : ", expiration_delay)
-	if expiration_delay < token_timeout:
-		print("refreshing access token 2")
-		var success = await refresh_access_token()
-		if !success:
-			return {"success": false, "message": "Couldn't retrieve refresh token"}
-			
-	return {"success": true, "message": "Succesfully retrieved access token"}
+		for user_attribute in user_attributes:
+			user[user_attribute.Name] = user_attribute.Value
+	return response
 
-func decode_jwt(token):
+func _clean_tokens():
+	tokens.clear()
+	_clear_user_attributes()
+
+func _clear_user_attributes():
+	user_attributes.clear()
+	user_refreshed.emit(user_attributes)
+
+func _get_access_token_expiration_time(access_token):
+	var decoded_token = _decode_jwt(access_token)
+	var token_payload = decoded_token.payload
+	return token_payload.exp
+
+func _decode_jwt(token):
 	var parts = token.split(".")
 	if parts.size() != 3:
 		return {}
@@ -265,20 +329,3 @@ func decode_jwt(token):
 	var payload = JSON.parse_string(Marshalls.base64_to_utf8(parts[1]))
 	
 	return {"header": header, "payload": payload}
-	
-func get_token_expiration_delay(token):
-	#error handling to be added
-	
-	var decoded_token = decode_jwt(token)
-	var token_payload = decoded_token.payload
-
-	return token_payload.exp - Time.get_unix_time_from_system()
-
-func _make_authenticated_request(endpoint, headers, method, body):
-	var authentication_result = await handle_authentication()
-	print(authentication_result)
-	if !authentication_result.success:
-		client.generate_response_json(authentication_result.success, authentication_result.message, 401, null, -1)
-	
-	headers.append("Authorization: Bearer " + access_token)
-	return await client.make_request(endpoint, headers, method, body)

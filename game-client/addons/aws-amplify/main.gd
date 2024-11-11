@@ -17,26 +17,25 @@ var config: Dictionary
 @export var data: AWSAmplifyData
 
 func _init(config_path = DEFAULT_CONFIG_PATH):
-
 	config = get_config(config_path)
 	
 	client = AWSAmplifyClientClass.new(config)
 	
 	if config.has(CONFIG_AUTH):
-		auth = AWSAmplifyAuthClass.new(client, config[CONFIG_AUTH], DEFAULT_TOKEN_TIMEOUT)
+		auth = AWSAmplifyAuthClass.new(client, config[CONFIG_AUTH])
 		
-	if config.has(CONFIG_DATA):
-		data = AWSAmplifyDataClass.new(client, config[CONFIG_DATA])
+		if config.has(CONFIG_DATA):
+			data = AWSAmplifyDataClass.new(auth, config[CONFIG_DATA])
 
 func _ready():
 	add_child(client)
 	if auth:
 		add_child(auth)
-	if data:
-		add_child(data)
+		
+		if data:
+			add_child(data)
 		
 func get_config(config_path) -> Dictionary:
-
 	var file = FileAccess.open(config_path, FileAccess.READ)
 	assert(file != null, "File does not exist: " + config_path)
 		
