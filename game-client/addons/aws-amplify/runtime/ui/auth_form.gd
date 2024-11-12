@@ -39,7 +39,7 @@ func _on_sign_in_button_pressed():
 	var response = await amplify.auth.sign_in_with_user_password(sign_in_e_mail.text, sign_in_password.password.text)
 	if response.success and sign_in_remember_me.toggled:
 		config[CONFIG_EMAIL] = sign_in_e_mail.text
-		#_save_user_config()
+		_save_user_config()
 		sign_in_message.set_success_message("You are signed-in!")
 	else:
 		sign_in_message.set_error_message(response.response_body.message)
@@ -235,7 +235,7 @@ func _ready() -> void:
 	auth_tab.set_tab_title(0, "Sign-In")
 	auth_tab.set_tab_title(1, "Sign-Up")
 	
-	#_load_user_config()
+	_load_user_config()
 	
 	if config.has(CONFIG_EMAIL):
 		auth_tab.current_tab = 0
