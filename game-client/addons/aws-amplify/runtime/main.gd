@@ -29,6 +29,7 @@ func _init(config_path = DEFAULT_CONFIG_PATH):
 
 func _ready():
 	add_child(client)
+	
 	if auth:
 		add_child(auth)
 		
