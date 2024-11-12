@@ -15,19 +15,19 @@ var config: Dictionary = {}
 # Sign-In
 
 @onready var sign_in_e_mail: LineEdit = %SignInEMail
-@onready var sign_in_password: LineEdit = %SignInPasswordContainer.password
+@onready var sign_in_password: AuthPassword = %SignInPasswordContainer
 @onready var sign_in_button: Button = %SignInButton
 @onready var sign_in_message: AuthMessage = %SignInMessage
 @onready var sign_in_remember_me: CheckButton = %SignInRememberMe
 @onready var forgot_password_confirm: VBoxContainer = %ForgotPasswordConfirm
 @onready var forgot_password_confirm_code: LineEdit = %ForgotPasswordConfirmCode
-@onready var forgot_password_confirm_password: LineEdit = %ForgotPasswordConfirmPasswordContainer.password
-@onready var forgot_password_confirm_password_confirmation: LineEdit = %ForgotPasswordConfirmPasswordConfirmationContainer.password
+@onready var forgot_password_confirm_password: AuthPassword = %ForgotPasswordConfirmPasswordContainer
+@onready var forgot_password_confirm_password_confirmation: AuthPassword = %ForgotPasswordConfirmPasswordConfirmationContainer
 @onready var forgot_password_confirm_button: Button = %ForgotPasswordConfirmButton
 @onready var forgot_password_confirm_message: AuthMessage = %ForgotPasswordConfirmMessage
 
 func _on_sign_in_input_changed(new_text: String) -> void:
-	if (sign_in_e_mail.text != "" and sign_in_password.text != ""):
+	if (sign_in_e_mail.text != "" and sign_in_password.password.text != ""):
 		sign_in_button.disabled = false
 	else:
 		sign_in_button.disabled = true
@@ -35,7 +35,7 @@ func _on_sign_in_input_changed(new_text: String) -> void:
 func _on_sign_in_button_pressed():
 	sign_in_button.disabled = true
 	
-	var response = await aws_amplify.auth.sign_in_with_user_password(sign_in_e_mail.text, sign_in_password.text)
+	var response = await aws_amplify.auth.sign_in_with_user_password(sign_in_e_mail.text, sign_in_password.password.text)
 	if response.success and sign_in_remember_me.toggled:
 		config[CONFIG_EMAIL] = sign_in_e_mail.text
 		_save_user_config()
@@ -50,14 +50,14 @@ func _on_sign_in_sign_up_link_pressed() -> void:
 
 func _on_sign_in_visibility_changed() -> void:
 	if sign_in.visible:
-		sign_in_password.text = ""
+		sign_in_password.password.text = ""
 		sign_in_message.text = ""
 		sign_in_button.disabled = true
 
 func _on_forgot_password_input_changed(new_text: String) -> void:
 	if (forgot_password_confirm_code.text != "" and 
-		forgot_password_confirm_password.text != "" and 
-		forgot_password_confirm_password_confirmation.text != ""):
+		forgot_password_confirm_password.password.text != "" and 
+		forgot_password_confirm_password_confirmation.password.text != ""):
 		forgot_password_confirm_button.disabled = false
 	else:
 		forgot_password_confirm_button.disabled = true
@@ -72,13 +72,13 @@ func _forgot_password_confirm_link_pressed() -> void:
 
 func _forgot_password_confirm_button_pressed() -> void:
 	forgot_password_confirm_button.disabled = true
-	if forgot_password_confirm_password.text != forgot_password_confirm_password_confirmation.text:
+	if forgot_password_confirm_password.password.text != forgot_password_confirm_password_confirmation.password.text:
 		forgot_password_confirm_message.set_error_message("Both passwords do not match!")
 	else:
 		var response = await aws_amplify.auth.forgot_password_confirm_code(
 			sign_in_e_mail.text, 
 			forgot_password_confirm_code.text, 
-			forgot_password_confirm_password.text
+			forgot_password_confirm_password.password.text
 		)
 		if response.success:
 			sign_in.show()
@@ -94,16 +94,16 @@ func _on_forgot_password_confirm_visibility_changed() -> void:
 	if forgot_password_confirm.visible:
 		auth_tab.set_tab_disabled(1, true)
 		forgot_password_confirm_code.text = ""
-		forgot_password_confirm_password.text = ""
-		forgot_password_confirm_password_confirmation.text = ""
+		forgot_password_confirm_password.password.text = ""
+		forgot_password_confirm_password_confirmation.password.text = ""
 	else:
 		auth_tab.set_tab_disabled(1, false)
 	
 # Sign-Up
 
 @onready var sign_up_e_mail: LineEdit = %SignUpEMail
-@onready var sign_up_password: LineEdit = %SignUpPasswordContainer.password
-@onready var sign_up_password_confirmation: LineEdit = %SignUpPasswordConfirmationContainer.password
+@onready var sign_up_password: AuthPassword = %SignUpPasswordContainer
+@onready var sign_up_password_confirmation: AuthPassword = %SignUpPasswordConfirmationContainer
 @onready var sign_up_button: Button = %SignUpButton
 @onready var sign_up_message: AuthMessage = %SignUpMessage
 @onready var sign_up_confirm: VBoxContainer = %SignUpConfirm
@@ -114,8 +114,8 @@ func _on_forgot_password_confirm_visibility_changed() -> void:
 
 func _on_sign_up_input_changed(new_text: String) -> void:
 	if (sign_up_e_mail.text != "" and 
-		sign_up_password.text != "" and 
-		sign_up_password_confirmation.text != ""):
+		sign_up_password.password.text != "" and 
+		sign_up_password_confirmation.password.text != ""):
 		sign_up_button.disabled = false
 	else:
 		sign_up_button.disabled = true
@@ -123,7 +123,7 @@ func _on_sign_up_input_changed(new_text: String) -> void:
 func _on_sign_up_button_pressed() -> void:
 	sign_up_button.disabled = true
 	
-	var response = await aws_amplify.auth.sign_up(sign_up_e_mail.text, sign_up_password.text)
+	var response = await aws_amplify.auth.sign_up(sign_up_e_mail.text, sign_up_password.password.text)
 	if response.success:
 		sign_up.hide()
 		sign_up_confirm.show()
@@ -138,8 +138,8 @@ func _on_sign_up_sign_in_link_pressed() -> void:
 func _on_sign_up_visibility_changed() -> void:
 	if sign_up.visible:
 		sign_up_e_mail.text = ""
-		sign_up_password.text = ""
-		sign_up_password_confirmation.text = ""
+		sign_up_password.password.text = ""
+		sign_up_password_confirmation.password.text = ""
 		sign_up_message.text = ""
 		sign_up_button.disabled = true
 	
@@ -156,7 +156,7 @@ func _on_sign_up_confirm_input_changed(new_text: String) -> void:
 func _on_sign_up_confirm_button_pressed() -> void:
 	sign_up_confirm_button.disabled = true
 	
-	if sign_up_password.text != sign_up_password_confirmation.text:
+	if sign_up_password.password.text != sign_up_password_confirmation.password.text:
 		sign_up_confirm_message.set_error_message("Both passwords do not match!")
 	else:
 		var response = await aws_amplify.auth.sign_up_confirm_code(sign_up_e_mail.text, sign_up_confirm_code.text)
