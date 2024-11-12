@@ -2,16 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ciuwy5asywq2b"
-path="res://.godot/imported/eye-solid.svg-a8c74339492c5cf6d45430ee55499c49.ctex"
+uid="uid://cbqvp737rondv"
+path="res://.godot/imported/logo.svg-12ab1823c917939a7f117b35a860d5f5.ctex"
 metadata={
+"has_editor_variant": true,
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/aws-amplify/icons/eye-solid.svg"
-dest_files=["res://.godot/imported/eye-solid.svg-a8c74339492c5cf6d45430ee55499c49.ctex"]
+source_file="res://addons/aws-amplify/plugin/icons/logo.svg"
+dest_files=["res://.godot/imported/logo.svg-12ab1823c917939a7f117b35a860d5f5.ctex"]
 
 [params]
 
@@ -32,6 +33,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
+svg/scale=0.7
+editor/scale_with_editor_scale=true
+editor/convert_colors_with_editor_theme=true

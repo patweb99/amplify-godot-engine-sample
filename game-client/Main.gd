@@ -1,31 +1,17 @@
 extends Node
 
-@onready var auth_form: AuthForm = %AuthForm
-@onready var retry: ColorRect = %Retry
-
 @export var mob_scene: PackedScene
 
-func _ready():
-	auth_form.show()
-	retry.hide()
-	
-	aws_amplify.auth.user_signed_in.connect(_on_user_signed_in)
-	aws_amplify.auth.user_signed_out.connect(_on_user_signed_out)
-	
-func _on_user_signed_in(user):
-	print("signed-in", user)
-	auth_form.hide()
-	retry.show()
 
-func _on_user_signed_out(user):
-	print("signed-out", user)
-	auth_form.show()
-	retry.hide()
-	
+func _ready():
+	$UserInterface/Retry.hide()
+
+
 func _unhandled_input(event):
 	if event.is_action_pressed("ui_accept") and $UserInterface/Retry.visible:
 		# warning-ignore:return_value_discarded
 		get_tree().reload_current_scene()
+
 
 func _on_mob_timer_timeout():
 	# Create a new instance of the Mob scene.
@@ -47,4 +33,8 @@ func _on_mob_timer_timeout():
 
 func _on_player_hit():
 	$MobTimer.stop()
-	%Retry.show()
+	$UserInterface/Retry.show()
+
+
+func _on_button_pressed() -> void:
+	aws_amplify.auth.global_sign_out()

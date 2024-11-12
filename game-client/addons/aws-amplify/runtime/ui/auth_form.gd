@@ -4,6 +4,7 @@ class_name AuthForm
 const USER_CONFIG_PATH = "user://.config"
 const CONFIG_EMAIL = "email"
 
+var amplify: AWSAmplify = aws_amplify
 var config: Dictionary = {}
 
 # Form
@@ -35,7 +36,7 @@ func _on_sign_in_input_changed(new_text: String) -> void:
 func _on_sign_in_button_pressed():
 	sign_in_button.disabled = true
 	
-	var response = await aws_amplify.auth.sign_in_with_user_password(sign_in_e_mail.text, sign_in_password.password.text)
+	var response = await amplify.auth.sign_in_with_user_password(sign_in_e_mail.text, sign_in_password.password.text)
 	if response.success and sign_in_remember_me.toggled:
 		config[CONFIG_EMAIL] = sign_in_e_mail.text
 		_save_user_config()
@@ -49,7 +50,7 @@ func _on_sign_in_sign_up_link_pressed() -> void:
 	auth_tab.current_tab = 1
 
 func _on_sign_in_visibility_changed() -> void:
-	if sign_in.visible:
+	if sign_in.visible: 
 		sign_in_password.password.text = ""
 		sign_in_message.text = ""
 		sign_in_button.disabled = true
@@ -63,7 +64,7 @@ func _on_forgot_password_input_changed(new_text: String) -> void:
 		forgot_password_confirm_button.disabled = true
 	
 func _forgot_password_confirm_link_pressed() -> void:
-	var response = await aws_amplify.auth.forgot_password(sign_in_e_mail.text)
+	var response = await amplify.auth.forgot_password(sign_in_e_mail.text)
 	if response.success:
 		sign_in.hide()
 		forgot_password_confirm.show()
@@ -75,7 +76,7 @@ func _forgot_password_confirm_button_pressed() -> void:
 	if forgot_password_confirm_password.password.text != forgot_password_confirm_password_confirmation.password.text:
 		forgot_password_confirm_message.set_error_message("Both passwords do not match!")
 	else:
-		var response = await aws_amplify.auth.forgot_password_confirm_code(
+		var response = await amplify.auth.forgot_password_confirm_code(
 			sign_in_e_mail.text, 
 			forgot_password_confirm_code.text, 
 			forgot_password_confirm_password.password.text
@@ -123,7 +124,7 @@ func _on_sign_up_input_changed(new_text: String) -> void:
 func _on_sign_up_button_pressed() -> void:
 	sign_up_button.disabled = true
 	
-	var response = await aws_amplify.auth.sign_up(sign_up_e_mail.text, sign_up_password.password.text)
+	var response = await amplify.auth.sign_up(sign_up_e_mail.text, sign_up_password.password.text)
 	if response.success:
 		sign_up.hide()
 		sign_up_confirm.show()
@@ -159,7 +160,7 @@ func _on_sign_up_confirm_button_pressed() -> void:
 	if sign_up_password.password.text != sign_up_password_confirmation.password.text:
 		sign_up_confirm_message.set_error_message("Both passwords do not match!")
 	else:
-		var response = await aws_amplify.auth.sign_up_confirm_code(sign_up_e_mail.text, sign_up_confirm_code.text)
+		var response = await amplify.auth.sign_up_confirm_code(sign_up_e_mail.text, sign_up_confirm_code.text)
 		if response.success:
 			sign_up.show()
 			sign_up_confirm.hide()
@@ -171,7 +172,7 @@ func _on_sign_up_confirm_button_pressed() -> void:
 	sign_up_confirm_button.disabled = true
 	
 func _on_sign_up_confirm_resend_code_link_pressed() -> void:
-	var response = await aws_amplify.auth.sign_up_resend_code(sign_up_confirm_e_mail.text)
+	var response = await amplify.auth.sign_up_resend_code(sign_up_confirm_e_mail.text)
 	if response.success:
 		sign_up_confirm_message.set_success_message("Code re-sent!")
 	else:
@@ -220,16 +221,16 @@ func _on_user_signed_out(user_attriutes):
 	sign_out.hide()
 
 func _on_sign_out_button_pressed() -> void:
-	await aws_amplify.auth.global_sign_out()
+	await amplify.auth.global_sign_out()
 
 func _on_sign_out_refresh_link_pressed() -> void:
-	await aws_amplify.auth.refresh_user(true, true)
+	await amplify.auth.refresh_user(true, true)
 
 # Ready
 
 func _ready() -> void:
-	aws_amplify.auth.user_signed_in.connect(_on_user_signed_in)
-	aws_amplify.auth.user_signed_out.connect(_on_user_signed_out)
+	amplify.auth.user_signed_in.connect(_on_user_signed_in)
+	amplify.auth.user_signed_out.connect(_on_user_signed_out)
 		
 	auth_tab.set_tab_title(0, "Sign-In")
 	auth_tab.set_tab_title(1, "Sign-Up")
@@ -247,7 +248,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if sign_out.visible:
 		var time_dictionary = Time.get_datetime_dict_from_unix_time(
-			aws_amplify.auth.get_user_access_token_expiration_time()-Time.get_unix_time_from_system()
+			amplify.auth.get_user_access_token_expiration_time()-Time.get_unix_time_from_system()
 		)
 		var time = "%d:%d:%d" % [time_dictionary["hour"], time_dictionary["minute"], time_dictionary["second"]]
 		sign_out_refresh_counter.text = time

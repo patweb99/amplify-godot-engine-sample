@@ -30,7 +30,7 @@ class TOKEN:
 	const REFRESH_TOKEN = "RefreshToken"	
 
 class USER:
-	const EMail = "Email"
+	const EMail = "EMail"
 
 var client: AWSAmplifyClient
 var config: Dictionary
@@ -54,7 +54,7 @@ func _init(_client: AWSAmplifyClient, _config: Dictionary) -> void:
 	user_attributes = {}
 
 func is_user_signed_in():
-	return tokens[TOKEN.ACCESS_TOKEN] != null && _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN]) < Time.get_unix_time_from_system()
+	return tokens.has(TOKEN.ACCESS_TOKEN) && _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN]) > Time.get_unix_time_from_system()
 
 func get_user_attributes(refresh_attributes = false):
 	refresh_user(refresh_attributes)

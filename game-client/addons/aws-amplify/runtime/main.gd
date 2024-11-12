@@ -12,9 +12,9 @@ const AWSAmplifyAuthClass := preload("./lib/auth.gd")
 const AWSAmplifyDataClass := preload("./lib/data.gd")
 
 var config: Dictionary
-@export var client: AWSAmplifyClient
-@export var auth: AWSAmplifyAuth
-@export var data: AWSAmplifyData
+var client: AWSAmplifyClient
+var auth: AWSAmplifyAuth
+var data: AWSAmplifyData
 
 func _init(config_path = DEFAULT_CONFIG_PATH):
 	config = get_config(config_path)

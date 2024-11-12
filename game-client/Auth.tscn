@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d0jxlqjawyvyq"]
+
+[ext_resource type="Script" path="res://Auth.gd" id="1_omydf"]
+
+[node name="Auth" type="Node"]
+script = ExtResource("1_omydf")

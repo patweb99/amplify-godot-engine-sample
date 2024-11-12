@@ -15,19 +15,23 @@ config/description="In this game, your goal is to chase and kick out the creeps!
 
 This is a finished version of the game featured in the \"Your first 3D game\"
 tutorial in the official documentation."
-run/main_scene="res://Main.tscn"
+run/main_scene="res://Auth.tscn"
 config/features=PackedStringArray("4.3")
 config/icon="res://icon.webp"
 
 [autoload]
 
 MusicPlayer="*res://MusicPlayer.tscn"
-aws_amplify="*res://addons/aws-amplify/main.gd"
+aws_amplify="*res://addons/aws-amplify/runtime/main.gd"
 
 [display]
 
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/aws-amplify/plugin.cfg")
 
 [filesystem]
 

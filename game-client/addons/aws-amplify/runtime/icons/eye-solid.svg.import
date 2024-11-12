@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c53ekb71gu7cq"
-path="res://.godot/imported/eye-slash-solid.svg-a5fb4542ded91f3cfb52c8105d3eb72b.ctex"
+uid="uid://ciuwy5asywq2b"
+path="res://.godot/imported/eye-solid.svg-5aa7a99df1a9379a9d7380eb22468e3b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/aws-amplify/icons/eye-slash-solid.svg"
-dest_files=["res://.godot/imported/eye-slash-solid.svg-a5fb4542ded91f3cfb52c8105d3eb72b.ctex"]
+source_file="res://addons/aws-amplify/runtime/icons/eye-solid.svg"
+dest_files=["res://.godot/imported/eye-solid.svg-5aa7a99df1a9379a9d7380eb22468e3b.ctex"]
 
 [params]
 
