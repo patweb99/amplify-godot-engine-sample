@@ -1,89 +1,95 @@
-extends Node
-class_name AWSAmplifyAuth
+class_name AWSAmplifyAuth  
+extends AWSAmplifyBase
 
+class USER_ATTRIBUTES:
+	const NAME = "name"
+	const FAMILY_NAME = "family_name"
+	const GIVEN_NAME = "given_name"	
+	const MIDDLE_NAME = "middle_name"
+	const NICKNAME = "nickname"
+	const PREFERRED_NAME = "preferred_username"
+	const PROFILE = "profile"
+	const PICTURE = "picture"
+	const WEBSITE = "website"
+	const GENDER = "gender"
+	const BIRTHDATE = "birthdate"
+	const ZONEINFO = "zoneinfo"
+	const LOCALE = "locale"
+	const UPDATED_AT = "updated_at"
+	const ADDRESS = "address"
+	const EMAIL = "email"
+	const PHONE_NUMBER = "phone_number"
+	const SUB = "sub"
+		
 class CONFIG:
 	const REGION = "aws_region"
 	const CLIENT_ID = "user_pool_client_id"
-
-class HEADERS:
-	const CONTENT_TYPE = "Content-Type: application/x-amz-json-1.1"
-	static func X_AMZ_TARGET(target) -> String:
-		return "X-Amz-Target: AWSCognitoIdentityProviderService." + target
-	static func AUTHORIZATION_BEARER(access_token) -> String:
-		return "Authorization: Bearer" + access_token
-
-class BODY:
-	const CLIENT_ID = "ClientId"
-	const AUTH_FLOW = "AuthFlow"
-	const AUTH_PARAMETERS = "AuthParameters"
-	const USERNAME = "Username"
-	const PASSWORD = "Password"
-	const CONFIRMATION_CODE = "ConfirmationCode"
-	const USER_ATTRIBUTES = "UserAttributes"
-	const AUTHENTICATED_RESULT = "AuthenticationResult"
-	const ACCESS_TOKEN = "AccessToken"
-	const REFRESH_TOKEN = "RefreshToken"
 
 class TOKEN:
 	const ACCESS_TOKEN = "AccessToken"
 	const ACCESS_TOKEN_EXPIRATION_TIME = "AccessTokenExpirationTime"
 	const REFRESH_TOKEN = "RefreshToken"	
 
-class USER:
-	const EMail = "EMail"
+class JWT:
+	const HEADER = "header"
+	const PAYLOAD = "payload"
+	const VERIFIED_SIGNATURE = "verified_signature"
+	
+var _client: AWSAmplifyClient
+var _config: Dictionary
+var _endpoint: String
+var _client_id: String
 
-var client: AWSAmplifyClient
-var config: Dictionary
-var endpoint: String
-var client_id: String
-
-var tokens: Dictionary
-var user_attributes: Dictionary
+var _tokens: Dictionary
+var _user_attributes: Dictionary
 
 signal user_signed_in
-signal user_refreshed
+signal user_changed
 signal user_signed_out
 signal user_signed_up
 
-func _init(_client: AWSAmplifyClient, _config: Dictionary) -> void:
-	client = _client
-	config = _config
-	client_id = config[CONFIG.CLIENT_ID]
-	endpoint = "https://cognito-idp." + config[CONFIG.REGION] + ".amazonaws.com/"
-	tokens = {}
-	user_attributes = {}
+func _init(client: AWSAmplifyClient, config: Dictionary) -> void:
+	_client = client
+	_config = config
+	_client_id = config[CONFIG.CLIENT_ID]
+	_endpoint = "https://cognito-idp." + config[CONFIG.REGION] + ".amazonaws.com/"
+	_tokens = {}
+	_user_attributes = {}
 
 func is_user_signed_in():
-	return tokens.has(TOKEN.ACCESS_TOKEN) && _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN]) > Time.get_unix_time_from_system()
+	return (
+		_tokens.has(TOKEN.ACCESS_TOKEN) && 
+		_get_access_token_expiration_time(_tokens[TOKEN.ACCESS_TOKEN]) > Time.get_unix_time_from_system()
+	)
 
 func get_user_attributes(refresh_attributes = false):
 	refresh_user(refresh_attributes)
-	return user_attributes
+	return _user_attributes
 	
 func get_user_access_token_expiration_time() -> int:
-	if tokens.has(TOKEN.ACCESS_TOKEN):
-		return _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN])
+	if _tokens.has(TOKEN.ACCESS_TOKEN):
+		return _get_access_token_expiration_time(_tokens[TOKEN.ACCESS_TOKEN])
 	else:
 		return Time.get_unix_time_from_system()
 	
 func add_user_attributes(_user_attributes: Dictionary = {}):
-	var attributes = user_attributes
+	var attributes = _user_attributes
 	attributes.merge(_user_attributes)
-	update_user_attributes(attributes)
+	return await update_user_attributes(attributes)
 	
 func remove_user_attributes(keys: Array):
-	var attributes = user_attributes
-	for key in user_attributes.keys():
-		if not keys.has(key):
-			attributes[key] = user_attributes[key]
-	update_user_attributes(attributes)
-
-func update_user_attributes(_user_attributes: Dictionary = {}):
 	var attributes = _user_attributes
-	for key in attributes.keys():
+	for key in _user_attributes.keys():
+		if not keys.has(key):
+			attributes[key] = _user_attributes[key]
+	return await update_user_attributes(attributes)
+
+func update_user_attributes(__user_attributes: Dictionary = {}):
+	var attributes = []
+	for key in __user_attributes.keys():
 		attributes.append({
 			"Name": key,
-			"Value": attributes[key]
+			"Value": __user_attributes[key]
 		})
 	
 	var headers = [
@@ -92,21 +98,24 @@ func update_user_attributes(_user_attributes: Dictionary = {}):
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: client_id,
-		BODY.USER_ATTRIBUTES: attributes
+		BODY.CLIENT_ID: _client_id,
+		BODY.USER_ATTRIBUTES: attributes,
+		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN]
 	}
-	
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+
+	var response = await _client.make_http_post(_endpoint, headers, body)
 	if response.success:
-		user_attributes = _user_attributes
-		user_refreshed.emit(user_attributes)
+		_user_attributes = __user_attributes
+		user_changed.emit(_user_attributes)
 	return response
 
 func refresh_user(refresh_access_token = false, refresh_attributes = false):
-	if tokens[TOKEN.ACCESS_TOKEN]:
+	if _tokens.has(TOKEN.ACCESS_TOKEN):
 		# refresh user access token if user access token has expired
-		if refresh_access_token or (tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] > Time.get_unix_time_from_system() and tokens[TOKEN.REFRESH_TOKEN]):
-			var response = await _refresh_user_access_token(tokens[TOKEN.REFRESH_TOKEN])
+		if (refresh_access_token or 
+			(_tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] > Time.get_unix_time_from_system() and 
+			 _tokens[TOKEN.REFRESH_TOKEN])):
+			var response = await _refresh_user_access_token(_tokens[TOKEN.REFRESH_TOKEN])
 			if not response.success:
 				_clean_tokens()
 		else:
@@ -114,48 +123,51 @@ func refresh_user(refresh_access_token = false, refresh_attributes = false):
 		
 		# refresh user attributes
 		if refresh_attributes:
-			var response = await _refresh_user_attributes(tokens[TOKEN.ACCESS_TOKEN])
+			var response = await _refresh_user_attributes(_tokens[TOKEN.ACCESS_TOKEN])
 			if response.success:
-				user_refreshed.emit(user_attributes)
+				user_changed.emit(_user_attributes)
 			else:
 				_clean_tokens()
 		else:
-			user_refreshed.emit(user_attributes)
+			user_changed.emit(_user_attributes)
 			
 	else:
 		_clear_user_attributes()
 
-func sign_in_with_user_password(email, password):
+func sign_in_with_username_password(username, password, auth_mode: AuthMode = AuthMode.EMAIL):
 	var headers = [
 		HEADERS.X_AMZ_TARGET("InitiateAuth"),
 		HEADERS.CONTENT_TYPE
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: client_id,
+		BODY.CLIENT_ID: _client_id,
 		BODY.AUTH_FLOW: "USER_PASSWORD_AUTH",
 		BODY.AUTH_PARAMETERS: {
-			"USERNAME": email,
+			"USERNAME": username,
 			"PASSWORD": password
 		}
 	}
 
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	var response = await _client.make_http_post(_endpoint, headers, body)
 	if response.success:
-		user_attributes = {}
-		user_attributes[USER.EMail] = email
-		
+		_user_attributes = {}
+		if AuthMode.EMAIL:
+			_user_attributes[USER_ATTRIBUTES.EMAIL] = username			
+		else:
+			_user_attributes[USER_ATTRIBUTES.PHONE_NUMBER] = username	
+
 		var response_body = response.response_body
 		if response_body.has(BODY.AUTHENTICATED_RESULT) and response_body[BODY.AUTHENTICATED_RESULT].has(BODY.ACCESS_TOKEN):
 			
 			var authenticated_result = response_body[BODY.AUTHENTICATED_RESULT]
-			tokens[TOKEN.ACCESS_TOKEN] = authenticated_result[BODY.ACCESS_TOKEN]
-			tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] = _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN])
-			tokens[TOKEN.REFRESH_TOKEN] = authenticated_result[BODY.REFRESH_TOKEN]
+			_tokens[TOKEN.ACCESS_TOKEN] = authenticated_result[BODY.ACCESS_TOKEN]
+			_tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] = _get_access_token_expiration_time(_tokens[TOKEN.ACCESS_TOKEN])
+			_tokens[TOKEN.REFRESH_TOKEN] = authenticated_result[BODY.REFRESH_TOKEN]
 			
-			var refresh_user_attributes_response = await _refresh_user_attributes(tokens[TOKEN.ACCESS_TOKEN])
+			var refresh_user_attributes_response = await _refresh_user_attributes(_tokens[TOKEN.ACCESS_TOKEN])
 			if refresh_user_attributes_response.success:
-				user_signed_in.emit(user_attributes)
+				user_signed_in.emit(_user_attributes)
 			else:
 				_clear_user_attributes()
 			return refresh_user_attributes_response
@@ -169,11 +181,11 @@ func forgot_password(email):
 	]
 
 	var body = {
-		BODY.CLIENT_ID: client_id,
+		BODY.CLIENT_ID: _client_id,
 		BODY.USERNAME: email
 	}
 
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	return await _client.make_http_post(_endpoint, headers, body)
 
 func forgot_password_confirm_code(email, confirmation_code, new_password):
 	var headers = [
@@ -182,13 +194,13 @@ func forgot_password_confirm_code(email, confirmation_code, new_password):
 	]
 
 	var body = {
-		BODY.CLIENT_ID: client_id,
+		BODY.CLIENT_ID: _client_id,
 		BODY.USERNAME: email,
 		BODY.CONFIRMATION_CODE: confirmation_code,
 		BODY.PASSWORD: new_password
 	}
 
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	return await _client.make_http_post(_endpoint, headers, body)
 
 func global_sign_out():
 	var headers = [
@@ -197,13 +209,13 @@ func global_sign_out():
 	]
 
 	var body = {
-		BODY.CLIENT_ID: client_id,
-		BODY.ACCESS_TOKEN: tokens[TOKEN.ACCESS_TOKEN]
+		BODY.CLIENT_ID: _client_id,
+		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN]
 	}
 	
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	var response = await _client.make_http_post(_endpoint, headers, body)
 	if response.success:
-		user_signed_out.emit(user_attributes)
+		user_signed_out.emit(_user_attributes)
 		_clean_tokens()
 	return response
 	
@@ -214,7 +226,7 @@ func sign_up(email, password, options = {}):
 	]
 
 	var body = {
-		BODY.CLIENT_ID: client_id,
+		BODY.CLIENT_ID: _client_id,
 		BODY.USERNAME: email,
 		BODY.PASSWORD: password
 	}
@@ -231,7 +243,7 @@ func sign_up(email, password, options = {}):
 
 		body[BODY.USER_ATTRIBUTES] = userAttributesArray
 	
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	var response = await _client.make_http_post(_endpoint, headers, body)
 	if response.success:
 		user_signed_up.emit()
 	return response
@@ -243,12 +255,12 @@ func sign_up_confirm_code(email, confirmation_code):
 	]
 
 	var body = {
-		BODY.CLIENT_ID: client_id,
+		BODY.CLIENT_ID: _client_id,
 		BODY.USERNAME: email,
 		BODY.CONFIRMATION_CODE: confirmation_code
 	}
 
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	return await _client.make_http_post(_endpoint, headers, body)
 
 func sign_up_resend_code(email):
 	var headers = [
@@ -257,16 +269,30 @@ func sign_up_resend_code(email):
 	]
 
 	var body = {
-		BODY.CLIENT_ID: client_id,
+		BODY.CLIENT_ID: _client_id,
 		BODY.USERNAME: email
 	}
 	
-	return await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	return await _client.make_http_post(_endpoint, headers, body)
 
-func make_authenticated_request(endpoint, headers, method, body):
-	refresh_user(false)
-	headers.append(HEADERS.AUTHORIZATION_BEARER(tokens[TOKEN.ACCESS_TOKEN]))
-	return await client.make_request(endpoint, headers, method, body)
+func make_authenticated_get(endpoint, headers, body):
+	return await make_authenticated_http_request(endpoint, headers, HTTPClient.METHOD_GET , body)
+
+func make_authenticated_post(endpoint, headers, body):
+	return await make_authenticated_http_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+
+func make_authenticated_put(endpoint, headers, body):
+	return await make_authenticated_http_request(endpoint, headers, HTTPClient.METHOD_PUT, body)
+
+func make_authenticated_http_delete(endpoint, headers, body):
+	return await make_authenticated_http_request(endpoint, headers, HTTPClient.METHOD_DELETE, body)
+
+func make_authenticated_http_request(endpoint, headers, method, body):
+	# automatically refresh access token if expired
+	refresh_user()
+	# append access token to the authorization bearer
+	headers.append(HEADERS.AUTHORIZATION_BEARER(_tokens[TOKEN.ACCESS_TOKEN]))
+	return await _client.make_http_request(_endpoint, headers, method, body)
 
 func _refresh_user_access_token(refresh_token):
 	var headers = [
@@ -275,18 +301,18 @@ func _refresh_user_access_token(refresh_token):
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: client_id,
+		BODY.CLIENT_ID: _client_id,
 		BODY.AUTH_FLOW:"REFRESH_TOKEN_AUTH",
 		BODY.AUTH_PARAMETERS: {
 			"REFRESH_TOKEN": refresh_token
 		}
 	}
 	
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	var response = await _client.make_http_post(_endpoint, headers, body)
 	var response_body = response.response_body
 	if response_body.has(BODY.AUTHENTICATED_RESULT) and response_body[BODY.AUTHENTICATED_RESULT].has(BODY.ACCESS_TOKEN):
-		tokens[TOKEN.ACCESS_TOKEN] = response_body[BODY.AUTHENTICATED_RESULT][BODY.ACCESS_TOKEN]
-		tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] = _get_access_token_expiration_time(tokens[TOKEN.ACCESS_TOKEN])
+		_tokens[TOKEN.ACCESS_TOKEN] = response_body[BODY.AUTHENTICATED_RESULT][BODY.ACCESS_TOKEN]
+		_tokens[TOKEN.ACCESS_TOKEN_EXPIRATION_TIME] = _get_access_token_expiration_time(_tokens[TOKEN.ACCESS_TOKEN])
 	return response
 	
 func _refresh_user_attributes(access_token):
@@ -299,21 +325,20 @@ func _refresh_user_attributes(access_token):
 		BODY.ACCESS_TOKEN: access_token,
 	}
 
-	var response = await client.make_request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	var response = await _client.make_http_post(_endpoint, headers, body)
 	if response.success:
-		var user_attributes = response.response_body[BODY.USER_ATTRIBUTES]
-		var user = {}
-		for user_attribute in user_attributes:
-			user[user_attribute.Name] = user_attribute.Value
+		var attributes = response.response_body[BODY.USER_ATTRIBUTES]
+		for attribute in attributes:
+			_user_attributes[attribute.Name] = attribute.Value
 	return response
 
 func _clean_tokens():
-	tokens.clear()
+	_tokens.clear()
 	_clear_user_attributes()
 
 func _clear_user_attributes():
-	user_attributes.clear()
-	user_refreshed.emit(user_attributes)
+	_user_attributes.clear()
+	user_changed.emit(_user_attributes)
 
 func _get_access_token_expiration_time(access_token):
 	var decoded_token = _decode_jwt(access_token)
@@ -322,10 +347,18 @@ func _get_access_token_expiration_time(access_token):
 
 func _decode_jwt(token):
 	var parts = token.split(".")
-	if parts.size() != 3:
-		return {}
 	
-	var header = JSON.parse_string(Marshalls.base64_to_utf8(parts[0]))
-	var payload = JSON.parse_string(Marshalls.base64_to_utf8(parts[1]))
+	assert(parts.size() == 3, "JWT Token must have 3 parts: header, payload and verified signature.")
 	
-	return {"header": header, "payload": payload}
+	var header_string = Marshalls.base64_to_utf8(parts[0])
+	var header = JSON.parse_string(header_string)
+	var payload_string = Marshalls.base64_to_utf8(parts[1])
+	var payload = JSON.parse_string(payload_string)
+	# var verified_signature_string = Marshalls.base64_to_utf8(parts[2])
+	# var verified_signature = JSON.parse_string(verified_signature_string)
+	
+	return {
+		JWT.HEADER: header, 
+		JWT.PAYLOAD: payload, 
+		# JWT.VERIFIED_SIGNATURE: verified_signature
+	}

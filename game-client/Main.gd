@@ -38,3 +38,14 @@ func _on_player_hit():
 
 func _on_button_pressed() -> void:
 	aws_amplify.auth.global_sign_out()
+
+func _on_user_attributes_button_pressed(toggled) -> void:
+	if toggled:
+		$MobTimer.stop()
+		$UserInterface/UserAttributes.visible = true
+	else:
+		_on_update_pressed()
+
+func _on_update_pressed() -> void:
+	$MobTimer.start()
+	$UserInterface/UserAttributes.visible = false

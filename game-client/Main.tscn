@@ -1,10 +1,11 @@
-[gd_scene load_steps=15 format=3 uid="uid://2y3ar4s86yra"]
+[gd_scene load_steps=16 format=3 uid="uid://2y3ar4s86yra"]
 
 [ext_resource type="Script" path="res://Main.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://dp478jyugrn7o" path="res://Player.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://ha0ar5s2c3m4" path="res://Mob.tscn" id="3"]
 [ext_resource type="Theme" uid="uid://cqquurjk1i7yw" path="res://ui_theme.tres" id="4_gnyca"]
 [ext_resource type="Script" path="res://ScoreLabel.gd" id="6"]
+[ext_resource type="PackedScene" uid="uid://bm3oa0co08npg" path="res://UserAttributes.tscn" id="6_rlj8c"]
 
 [sub_resource type="BoxShape3D" id="1"]
 size = Vector3(60, 2, 60)
@@ -148,11 +149,9 @@ grow_vertical = 2
 theme = ExtResource("4_gnyca")
 
 [node name="ScoreLabel" type="Label" parent="UserInterface"]
-layout_mode = 0
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 77.0
-offset_bottom = 42.0
+layout_mode = 1
+offset_right = 128.0
+offset_bottom = 40.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 32
 text = "Score: 0"
@@ -182,15 +181,47 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 32
 text = "Press Space or Enter to retry"
 
-[node name="Button" type="Button" parent="UserInterface"]
+[node name="Disconnect" type="Button" parent="UserInterface"]
 layout_mode = 1
-offset_left = 13.0
-offset_top = 64.0
-offset_right = 160.0
-offset_bottom = 103.0
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -147.0
+offset_top = -39.0
+grow_horizontal = 0
+grow_vertical = 0
 theme_override_font_sizes/font_size = 24
 text = "Disconnect"
 
+[node name="UserAttributesButton" type="Button" parent="UserInterface"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -77.0
+offset_bottom = 46.0
+grow_horizontal = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+toggle_mode = true
+shortcut_feedback = false
+shortcut_in_tooltip = false
+text = "User"
+
+[node name="UserAttributes" parent="UserInterface" instance=ExtResource("6_rlj8c")]
+visible = false
+layout_mode = 1
+offset_left = 308.0
+offset_top = -176.0
+offset_right = 558.0
+offset_bottom = 224.0
+
 [connection signal="hit" from="Player" to="." method="_on_player_hit"]
 [connection signal="timeout" from="MobTimer" to="." method="_on_mob_timer_timeout"]
-[connection signal="pressed" from="UserInterface/Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="UserInterface/Disconnect" to="." method="_on_button_pressed"]
+[connection signal="toggled" from="UserInterface/UserAttributesButton" to="." method="_on_user_attributes_button_pressed"]
+[connection signal="pressed" from="UserInterface/UserAttributes/Update" to="." method="_on_update_pressed"]
+
+[editable path="UserInterface/UserAttributes"]
