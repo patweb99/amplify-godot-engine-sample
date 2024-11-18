@@ -148,6 +148,7 @@ grow_vertical = 2
 theme = ExtResource("4_gnyca")
 
 [node name="ScoreLabel" type="Label" parent="UserInterface"]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 16.0
 offset_top = 16.0
@@ -160,27 +161,63 @@ script = ExtResource("6")
 
 [node name="Retry" type="ColorRect" parent="UserInterface"]
 unique_name_in_owner = true
-visible = false
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0, 0, 0, 0.447059)
 
-[node name="Label" type="Label" parent="UserInterface/Retry"]
+[node name="LeaderboardTitle" type="Label" parent="UserInterface/Retry"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -75.0
-offset_top = -13.0
-offset_right = 75.0
-offset_bottom = 13.0
+offset_left = -55.0
+offset_top = -278.0
+offset_right = 38.0
+offset_bottom = -257.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "Top Players"
+horizontal_alignment = 1
+
+[node name="Leaderboard" type="ItemList" parent="UserInterface/Retry"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -275.0
+offset_right = 275.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 25
+
+[node name="RetryLabel" type="Label" parent="UserInterface/Retry"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -239.0
+offset_top = 232.0
+offset_right = 221.0
+offset_bottom = 272.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 32
 text = "Press Space or Enter to retry"
+horizontal_alignment = 1
+vertical_alignment = 2
 
 [node name="Button" type="Button" parent="UserInterface"]
 layout_mode = 1

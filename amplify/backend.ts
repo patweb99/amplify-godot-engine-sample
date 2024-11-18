@@ -1,12 +1,14 @@
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
+import { data } from './data/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
  */
 const backend = defineBackend({
-    auth
+    auth,
+    data
 });
 backend.auth.resources.cfnResources.cfnUserPoolClient.explicitAuthFlows = [
     "ALLOW_CUSTOM_AUTH",
