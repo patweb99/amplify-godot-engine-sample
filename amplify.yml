@@ -1,21 +1,36 @@
 version: 1
+env:
+  variables:
+    GAME_DIR: game-client
+    EXPORT_DIR: build
+    GIT_TAG: $(./scripts/get_git_tag)
+    BUILD_TAG: "$AWS_BRANCH_$AWS_COMMIT_ID_b$AWS_JOB_ID"
+    VERSION: ${GIT_TAG:-$BUILD_TAG}
+
 backend:
     phases:
         build:
             commands:
+                # Build and Deploy Game Backend
                 - npm ci --cache .npm --prefer-offline
                 - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
-                - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID --out-dir ./game-client
+                - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID --out-dir ./$GAME_DIR
+
 frontend:
     phases: 
         build:
             commands:
-                # Export game for Web
-                - cd game-client
-                - mkdir build
-                - godot --headless --verbose --export-release "Web"
+                # Export 'Web' Game Client
+                - ./scripts/export_game_client $GAME_DIR $EXPORT_DIR Web $VERSION
+
+                # Export 'macOS' Game Client
+                - ./scripts/export_game_client $GAME_DIR $EXPORT_DIR macOS $VERSION
+
+                #- BUCKET_NAME=$(jq -r '.storage.bucket_name' amplify_outputs.json)
+                #- echo "Uploading macOS client build to Amazon S3 Bucket $BUCKET_NAME..."
+                #- aws s3 cp game-client/build-mac/squash_the_creeps_macos.zip s3://$BUCKET_NAME/releases/squash_the_creeps_macos.zip
     artifacts:
-        baseDirectory: game-client/build
+        baseDirectory: $GAME_DIR/$EXPORT_DIR/Web
         files:
             - '**/*'  
     cache:

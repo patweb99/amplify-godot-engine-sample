@@ -1,0 +1,52 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <config_file_path> <preset_name>"
+    exit 1
+fi
+
+config_file="$1"
+preset_name="$2"
+
+if [ ! -f "$config_file" ]; then
+    echo "Error: Config file not found: $config_file"
+    exit 1
+fi
+
+platform=$(awk -v preset="$preset_name" '
+BEGIN {
+    FS = "="
+    found = 0
+}
+
+/^\[preset\.[0-9]+\]/ {
+    in_preset = 0
+}
+
+$1 ~ /^name/ {
+    gsub(/^[[:space:]]*"|"[[:space:]]*$/, "", $2)
+    if ($2 == preset) {
+        in_preset = 1
+    }
+}
+
+$1 ~ /^platform/ && in_preset == 1 {
+    gsub(/^[[:space:]]*"|"[[:space:]]*$/, "", $2)
+    print $2
+    found = 1
+    exit
+}
+
+END {
+    if (found == 0) {
+        print "not_found"
+    }
+}
+' "$config_file")
+
+if [ $? -ne 0 ]; then
+    echo "Error: Preset '$preset_name' not found in $config_file." >&2
+    exit 1
+fi
+
+echo "$platform"

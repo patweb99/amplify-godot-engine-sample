@@ -4,6 +4,7 @@
   "description": "This project will provide sample code and explanation on how to build and deploy a game with AWS Amplify. We are using the populare open source game engine Godot: https://godotengine.org/",
   "main": "index.js",
   "scripts": {
+    "sandbox": "npx ampx sandbox --outputs-out-dir game-client",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

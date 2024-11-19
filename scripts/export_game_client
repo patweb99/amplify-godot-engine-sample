@@ -1,0 +1,37 @@
+#!/bin/bash
+
+PROJECT_DIR=$1      # The project directory where the 'project.godot file is located'
+EXPORT_DIR=$2       # The base directory to export project to
+PRESET_NAME=$3      # The name of the export preset
+VERSION=$4          # The version of the export
+
+SCRIPT_DIR="$(dirname "$0")"
+GET_PROJECT_NAME="$SCRIPT_DIR/get_project_name"
+GET_PLATFORM_FOR_PRESET="$SCRIPT_DIR/get_platform_for_preset"
+
+PROJECT_CONFIG_FILE="$PROJECT_DIR/project.godot"
+EXPORT_PRESETS_CONFIG_FILE="$PROJECT_DIR/export_presets.cfg"
+
+EXPORT_PRESET_NAME=$($GET_PROJECT_NAME $PROJECT_CONFIG_FILE)
+EXPORT_PRESET_PLATFORM=$($GET_PLATFORM_FOR_PRESET $EXPORT_PRESETS_CONFIG_FILE $PRESET_NAME)
+
+EXPORT_PRESET_DIR="$EXPORT_DIR/${PRESET_NAME// /_}"
+EXPORT_PRESET_PATH="$EXPORT_PRESET_DIR/${EXPORT_PRESET_NAME// /_}_v$VERSION"
+
+if [ $EXPORT_PRESET_PLATFORM == "Web" ]; then
+    EXPORT_PRESET_PATH="$EXPORT_PRESET_DIR/index.html"
+elif [ $EXPORT_PRESET_PLATFORM == "macOS" ]; then
+    EXPORT_PRESET_PATH="$EXPORT_PRESET_PATH.zip"
+fi
+
+echo "Exporting Game Client for preset $PRESET_NAME and platform $EXPORT_PRESET_PLATFORM to $EXPORT_PRESET_PATH"
+mkdir -p "$PROJECT_DIR/$EXPORT_PRESET_DIR"
+rm -rf "$PROJECT_DIR/$EXPORT_PRESET_DIR/*"
+godot $PROJECT_CONFIG_FILE --headless --verbose --export-release "$PRESET_NAME" "$EXPORT_PRESET_PATH" 
+
+echo $EXPORT_PRESET_PATH
+
+#cd ..
+#BUCKET_NAME=$(jq -r '.storage.bucket_name' amplify_outputs.json)
+#echo "Uploading macOS client build to Amazon S3 Bucket $BUCKET_NAME..."
+#aws s3 cp game-client/build-mac/squash_the_creeps_macos.zip s3://$BUCKET_NAME/releases/squash_the_creeps_macos.zip
