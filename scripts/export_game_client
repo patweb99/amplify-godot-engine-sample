@@ -20,15 +20,6 @@ if [ $# -lt 4 ]; then
     exit 1
 fi
 
-# Function to export the project using Godot
-export_godot_project() {
-    local config_file=$1
-    local preset_name=$2
-    local export_path=$3
-
-    godot "$config_file" --headless --verbose --export-release "$preset_name" "$export_path"
-}
-
 # Arguments
 PROJECT_DIR=$1      # The project directory where the 'project.godot' file is located
 EXPORT_DIR=$2       # The base directory to export project to
@@ -95,8 +86,8 @@ PROJECT_PRESET_EXPORT_DIR="$PROJECT_DIR/$PRESET_EXPORT_DIR"
 mkdir -p "$PROJECT_PRESET_EXPORT_DIR"
 rm -rf "$PROJECT_PRESET_EXPORT_DIR/"*
 
-# Call the function to export the project
-export_godot_project "$PROJECT_CONFIG_FILE" "$PRESET_NAME" "$PRESET_EXPORT_PATH"
+# Export the project
+godot $PROJECT_CONFIG_FILE --headless --verbose --export-release $PRESET_NAME $PRESET_EXPORT_PATH
 
 # Output the export path
-echo "$PRESET_EXPORT_PATH"
+echo $PRESET_EXPORT_PATH
