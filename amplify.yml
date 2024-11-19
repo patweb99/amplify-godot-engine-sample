@@ -21,15 +21,21 @@ frontend:
             commands:
                 # Generate configuration
                 - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID --out-dir ./$GAME_DIR
-                - AMPLIFY_OUTPUTS_FILE=$GAME_DIR/amplify_outputs.json
+                - AMPLIFY_OUTPUTS_FILE="$GAME_DIR/amplify_outputs.json"
+                - echo $AMPLIFY_OUTPUTS_FILE
+
+                # Retrieve storage bucket name
                 - BUCKET_NAME=$(./scripts/get_bucket_name $AMPLIFY_OUTPUTS_FILE)
+                - echo $BUCKET_NAME
 
                 # Export 'Web' game client
                 - ./scripts/export_game_client $GAME_DIR $EXPORT_DIR Web $VERSION
 
                 # Export 'macOS' game client
                 - MACOS_FILE=$(./scripts/export_game_client $GAME_DIR $EXPORT_DIR macOS $VERSION)
-                - ./scripts/publish_game_client $MACOS_FILE $BUCKET_NAME releases/MacOS
+                - echo "$MACOS_FILE"
+                - echo "$GAME_DIR/$MACOS_FILE"
+                - ./scripts/publish_game_client "$GAME_DIR/$MACOS_FILE" $BUCKET_NAME MacOS
 
     artifacts:
         baseDirectory: game-client/build/Web
