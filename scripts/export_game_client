@@ -1,5 +1,25 @@
 #!/bin/bash
 
+# Function to display usage information
+usage() {
+    echo "Usage: $0 <PROJECT_DIR> <EXPORT_DIR> <PRESET_NAME> <VERSION> [PLATFORM] [PROJECT_NAME]"
+    echo
+    echo "Arguments:"
+    echo "  PROJECT_DIR   The project directory where the 'project.godot' file is located"
+    echo "  EXPORT_DIR    The base directory to export project to"
+    echo "  PRESET_NAME   The name of the export preset"
+    echo "  VERSION       The version of the export"
+    echo "  PLATFORM      (Optional) The platform"
+    echo "  PROJECT_NAME  (Optional) The project name"
+}
+
+# Check for minimum required arguments
+if [ $# -lt 4 ]; then
+    echo "Error: Insufficient arguments provided."
+    usage
+    exit 1
+fi
+
 # Function to export the project using Godot
 export_godot_project() {
     local config_file=$1
@@ -9,42 +29,74 @@ export_godot_project() {
     godot "$config_file" --headless --verbose --export-release "$preset_name" "$export_path"
 }
 
-# Input parameters
+# Arguments
 PROJECT_DIR=$1      # The project directory where the 'project.godot' file is located
 EXPORT_DIR=$2       # The base directory to export project to
 PRESET_NAME=$3      # The name of the export preset
 VERSION=$4          # The version of the export
+PLATFORM=$5         # The platform (Optional)
+PROJECT_NAME=$6     # The project name (Optional)
+
+# Check if PROJECT_DIR exists
+if [ ! -d "$PROJECT_DIR" ]; then
+    echo "Error: Project directory does not exist: $PROJECT_DIR"
+    exit 1
+fi
+
+# Check if project.godot file exists
+if [ ! -f "$PROJECT_DIR/project.godot" ]; then
+    echo "Error: project.godot file not found in $PROJECT_DIR"
+    exit 1
+fi
 
 # Script locations
 SCRIPT_DIR="$(dirname "$0")"
+GET_PLATFORM="$SCRIPT_DIR/get_platform"
 GET_PROJECT_NAME="$SCRIPT_DIR/get_project_name"
-GET_PLATFORM_FOR_PRESET="$SCRIPT_DIR/get_platform_for_preset"
 
 # Configuration file paths
 PROJECT_CONFIG_FILE="$PROJECT_DIR/project.godot"
 EXPORT_PRESETS_CONFIG_FILE="$PROJECT_DIR/export_presets.cfg"
 
 # Get project name and platform
-EXPORT_PRESET_NAME=$($GET_PROJECT_NAME "$PROJECT_CONFIG_FILE")
-EXPORT_PRESET_PLATFORM=$($GET_PLATFORM_FOR_PRESET "$EXPORT_PRESETS_CONFIG_FILE" "$PRESET_NAME")
+EXPORT_PLATFORM=$PLATFORM
+
+if [ "$EXPORT_PLATFORM" == "" ]; then
+    EXPORT_PLATFORM=$($GET_PLATFORM $EXPORT_PRESETS_CONFIG_FILE $PRESET_NAME)
+fi
+
+EXPORT_PROJECT_NAME=$($GET_PROJECT_NAME $PROJECT_CONFIG_FILE)
+
+if [ "$EXPORT_PROJECT_NAME" == "" ]; then
+    EXPORT_PROJECT_NAME=$($GET_PROJECT_NAME $EXPORT_PRESETS_CONFIG_FILE $PRESET_NAME)
+fi
 
 # Set up export directory and path
-EXPORT_PRESET_DIR="$EXPORT_DIR/${PRESET_NAME// /_}"
-EXPORT_PRESET_PATH="$EXPORT_PRESET_DIR/${EXPORT_PRESET_NAME// /_}_v$VERSION"
+PRESET_EXPORT_DIR="$EXPORT_DIR/${PRESET_NAME// /_}"
+PRESET_EXPORT_PATH="$PRESET_EXPORT_DIR/${EXPORT_PROJECT_NAME// /_}_v$VERSION"
 
-# Adjust export path basbased on platform
-if [ "$EXPORT_PRESET_PLATFORM" == "Web" ]; then
-    EXPORT_PRESET_PATH="$EXPORT_PRESET_DIR/index.html"
-elif [ "$EXPORT_PRESET_PLATFORM" == "macOS" ]; then
-    EXPORT_PRESET_PATH="$EXPORT_PRESET_PATH.zip"
+# Adjust export path based on platform
+if [ "$EXPORT_PLATFORM" == "Web" ]; then
+    PRESET_EXPORT_PATH="$PRESET_EXPORT_DIR/index.html"
+elif [ "$EXPORT_PLATFORM" == "Linux" ]; then
+    PRESET_EXPORT_PATH="$PRESET_EXPORT_PATH"
+elif [ "$EXPORT_PLATFORM" == "macOS" ]; then
+    PRESET_EXPORT_PATH="$PRESET_EXPORT_PATH.zip"
+elif [ "$EXPORT_PLATFORM" == "Windows Desktop" ]; then
+    PRESET_EXPORT_PATH="$PRESET_EXPORT_PATH.exe"
+elif [ "$EXPORT_PLATFORM" == "Android" ]; then
+    PRESET_EXPORT_PATH="$PRESET_EXPORT_PATH.apk"
+elif [ "$EXPORT_PLATFORM" == "iOS" ]; then
+    PRESET_EXPORT_PATH="$PRESET_EXPORT_PATH.zip"
 fi
 
 # Create export directory and remove any existing content
-mkdir -p "$PROJECT_DIR/$EXPORT_PRESET_DIR"
-rm -rf "$PROJECT_DIR/$EXPORT_PRESET_DIR/"*
+PROJECT_PRESET_EXPORT_DIR="$PROJECT_DIR/$PRESET_EXPORT_DIR"
+mkdir -p "$PROJECT_PRESET_EXPORT_DIR"
+rm -rf "$PROJECT_PRESET_EXPORT_DIR/"*
 
 # Call the function to export the project
-export_godot_project "$PROJECT_CONFIG_FILE" "$PRESET_NAME" "$EXPORT_PRESET_PATH"
+export_godot_project "$PROJECT_CONFIG_FILE" "$PRESET_NAME" "$PRESET_EXPORT_PATH"
 
 # Output the export path
-echo "$EXPORT_PRESET_PATH"
+echo "$PRESET_EXPORT_PATH"
