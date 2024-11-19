@@ -9,9 +9,3 @@ import { storage } from './storage/resource';
 const backend = defineBackend({
     storage: storage
 });
-/*backend.storage.resources.bucket.addToResourcePolicy(new iam.PolicyStatement({
-    effect: iam.Effect.ALLOW,
-    principals: [new iam.ServicePrincipal("amplify.amazonaws.com")],
-    actions: ["s3:PutObject"],
-    resources: [backend.storage.resources.bucket.arnForObjects("*")]
-}))*/
