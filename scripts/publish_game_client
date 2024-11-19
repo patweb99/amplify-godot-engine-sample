@@ -1,0 +1,9 @@
+#!/bin/bash
+
+FILE_PATH=$1
+BUCKET_NAME=$2
+BUCKET_PATH=$3
+FILE_NAME=$(basename $FILE_PATH)
+
+echo "Publishing $FILE_PATH to Amazon S3 Bucket $BUCKET_NAME..."
+echo aws s3 cp $FILE_PATH s3://$BUCKET_NAME/$BUCKET_PATH/$FILE_NAME

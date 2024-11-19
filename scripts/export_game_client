@@ -30,8 +30,3 @@ rm -rf "$PROJECT_DIR/$EXPORT_PRESET_DIR/*"
 godot $PROJECT_CONFIG_FILE --headless --verbose --export-release "$PRESET_NAME" "$EXPORT_PRESET_PATH" 
 
 echo $EXPORT_PRESET_PATH
-
-#cd ..
-#BUCKET_NAME=$(jq -r '.storage.bucket_name' amplify_outputs.json)
-#echo "Uploading macOS client build to Amazon S3 Bucket $BUCKET_NAME..."
-#aws s3 cp game-client/build-mac/squash_the_creeps_macos.zip s3://$BUCKET_NAME/releases/squash_the_creeps_macos.zip
