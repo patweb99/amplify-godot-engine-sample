@@ -24,7 +24,6 @@ elif [ $EXPORT_PRESET_PLATFORM == "macOS" ]; then
     EXPORT_PRESET_PATH="$EXPORT_PRESET_PATH.zip"
 fi
 
-echo "Exporting Game Client for preset $PRESET_NAME and platform $EXPORT_PRESET_PLATFORM to $EXPORT_PRESET_PATH"
 mkdir -p "$PROJECT_DIR/$EXPORT_PRESET_DIR"
 rm -rf "$PROJECT_DIR/$EXPORT_PRESET_DIR/*"
 godot $PROJECT_CONFIG_FILE --headless --verbose --export-release "$PRESET_NAME" "$EXPORT_PRESET_PATH" 
