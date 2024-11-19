@@ -2,15 +2,15 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 <PROJECT_DIR> <EXPORT_DIR> <PRESET_NAME> <VERSION> [PLATFORM] [PROJECT_NAME]"
+    echo "Usage: $0 <project_dir> <export_dir> <preset_name> <version> [platform] [project_name]"
     echo
     echo "Arguments:"
-    echo "  PROJECT_DIR   The project directory where the 'project.godot' file is located"
-    echo "  EXPORT_DIR    The base directory to export project to"
-    echo "  PRESET_NAME   The name of the export preset"
-    echo "  VERSION       The version of the export"
-    echo "  PLATFORM      (Optional) The platform"
-    echo "  PROJECT_NAME  (Optional) The project name"
+    echo "  project_dir   The project directory where the 'project.godot' file is located"
+    echo "  export_dir    The base directory to export project to"
+    echo "  preset_name   The name of the export preset"
+    echo "  version       The version of the export"
+    echo "  platform      (Optional) The platform"
+    echo "  project_name  (Optional) The project name"
 }
 
 # Check for minimum required arguments
@@ -87,6 +87,7 @@ mkdir -p "$PROJECT_PRESET_EXPORT_DIR"
 rm -rf "$PROJECT_PRESET_EXPORT_DIR/"*
 
 # Export the project
+echo "Exporting $PRESET_NAME to $PRESET_EXPORT_PATH"
 godot $PROJECT_CONFIG_FILE --headless --verbose --export-release $PRESET_NAME $PRESET_EXPORT_PATH
 
 # Output the export path

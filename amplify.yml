@@ -33,8 +33,6 @@ frontend:
 
                 # Export 'macOS' game client
                 - MACOS_FILE=$(./scripts/export_game_client $GAME_DIR $EXPORT_DIR macOS $VERSION | tail -n 1)
-                - echo "$MACOS_FILE"
-                - echo "$GAME_DIR/$MACOS_FILE"
                 - ./scripts/publish_game_client "$GAME_DIR/$MACOS_FILE" $BUCKET_NAME MacOS
 
     artifacts:
