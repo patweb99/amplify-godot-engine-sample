@@ -24,7 +24,7 @@ frontend:
                 - ./scripts/export_game_client $GAME_DIR $EXPORT_DIR Web $VERSION
 
                 # Export 'macOS' Game Client
-                - ./scripts/export_game_client $GAME_DIR $EXPORT_DIR macOS $VERSION
+                #- ./scripts/export_game_client $GAME_DIR $EXPORT_DIR macOS $VERSION
 
                 #- BUCKET_NAME=$(jq -r '.storage.bucket_name' amplify_outputs.json)
                 #- echo "Uploading macOS client build to Amazon S3 Bucket $BUCKET_NAME..."
