@@ -24,21 +24,21 @@ frontend:
                 - AMPLIFY_OUTPUTS_FILE="$GAME_DIR/amplify_outputs.json"
                 - echo $AMPLIFY_OUTPUTS_FILE
 
-                # Retrieve storage bucket name
+                # Retrieve bucket name
                 - BUCKET_NAME=$(./scripts/get_bucket_name $AMPLIFY_OUTPUTS_FILE)
                 - echo $BUCKET_NAME
 
                 # Export 'Web' game client
                 - ./scripts/export_game_client $GAME_DIR $EXPORT_DIR Web $VERSION
 
-                # Export 'macOS' game client
+                # Publish 'macOS' game client
                 - ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR MacOS $VERSION $BUCKET_NAME
 
-                # Export 'Linux' game client
-                #- ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Linux $VERSION $BUCKET_NAME
+                # Publish 'Linux' game client
+                - ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Linux $VERSION $BUCKET_NAME
 
-                # Export 'Windows' game client
-                #- ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Windows $VERSION $BUCKET_NAME
+                # Publish 'Windows' game client
+                - ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Windows $VERSION $BUCKET_NAME
 
     artifacts:
         baseDirectory: game-client/build/Web
