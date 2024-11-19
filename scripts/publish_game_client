@@ -16,7 +16,7 @@ usage() {
 }
 
 # Check if the minimum required arguments are provided
-if [ $# -lt 6 ]; then
+if [ $# -lt 5 ]; then
     echo "Error: Insufficient arguments provided."
     usage
     exit 1

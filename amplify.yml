@@ -28,16 +28,16 @@ frontend:
                 - BUCKET_NAME=$(./scripts/get_bucket_name $AMPLIFY_OUTPUTS_FILE)
                 - echo $BUCKET_NAME
 
-                # Export 'Web' game client
+                # Build 'Web' game client
                 - ./scripts/export_game_client $GAME_DIR $EXPORT_DIR Web $VERSION
 
-                # Publish 'macOS' game client
+                # Publish 'macOS' game client on AWS Amplify storage
                 - ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR MacOS $VERSION $BUCKET_NAME
 
-                # Publish 'Linux' game client
+                # Publish 'Linux' game client on AWS Amplify storage
                 - ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Linux $VERSION $BUCKET_NAME
 
-                # Publish 'Windows' game client
+                # Publish 'Windows' game client on AWS Amplify storage
                 - ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Windows $VERSION $BUCKET_NAME
 
     artifacts:
