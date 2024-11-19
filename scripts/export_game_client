@@ -1,31 +1,50 @@
 #!/bin/bash
 
-PROJECT_DIR=$1      # The project directory where the 'project.godot file is located'
+# Function to export the project using Godot
+export_godot_project() {
+    local config_file=$1
+    local preset_name=$2
+    local export_path=$3
+
+    godot "$config_file" --headless --verbose --export-release "$preset_name" "$export_path"
+}
+
+# Input parameters
+PROJECT_DIR=$1      # The project directory where the 'project.godot' file is located
 EXPORT_DIR=$2       # The base directory to export project to
 PRESET_NAME=$3      # The name of the export preset
 VERSION=$4          # The version of the export
 
+# Script locations
 SCRIPT_DIR="$(dirname "$0")"
 GET_PROJECT_NAME="$SCRIPT_DIR/get_project_name"
 GET_PLATFORM_FOR_PRESET="$SCRIPT_DIR/get_platform_for_preset"
 
+# Configuration file paths
 PROJECT_CONFIG_FILE="$PROJECT_DIR/project.godot"
 EXPORT_PRESETS_CONFIG_FILE="$PROJECT_DIR/export_presets.cfg"
 
-EXPORT_PRESET_NAME=$($GET_PROJECT_NAME $PROJECT_CONFIG_FILE)
-EXPORT_PRESET_PLATFORM=$($GET_PLATFORM_FOR_PRESET $EXPORT_PRESETS_CONFIG_FILE $PRESET_NAME)
+# Get project name and platform
+EXPORT_PRESET_NAME=$($GET_PROJECT_NAME "$PROJECT_CONFIG_FILE")
+EXPORT_PRESET_PLATFORM=$($GET_PLATFORM_FOR_PRESET "$EXPORT_PRESETS_CONFIG_FILE" "$PRESET_NAME")
 
+# Set up export directory and path
 EXPORT_PRESET_DIR="$EXPORT_DIR/${PRESET_NAME// /_}"
 EXPORT_PRESET_PATH="$EXPORT_PRESET_DIR/${EXPORT_PRESET_NAME// /_}_v$VERSION"
 
-if [ $EXPORT_PRESET_PLATFORM == "Web" ]; then
+# Adjust export path basbased on platform
+if [ "$EXPORT_PRESET_PLATFORM" == "Web" ]; then
     EXPORT_PRESET_PATH="$EXPORT_PRESET_DIR/index.html"
-elif [ $EXPORT_PRESET_PLATFORM == "macOS" ]; then
+elif [ "$EXPORT_PRESET_PLATFORM" == "macOS" ]; then
     EXPORT_PRESET_PATH="$EXPORT_PRESET_PATH.zip"
 fi
 
+# Create export directory and remove any existing content
 mkdir -p "$PROJECT_DIR/$EXPORT_PRESET_DIR"
-rm -rf "$PROJECT_DIR/$EXPORT_PRESET_DIR/*"
-godot $PROJECT_CONFIG_FILE --headless --verbose --export-release "$PRESET_NAME" "$EXPORT_PRESET_PATH" 
+rm -rf "$PROJECT_DIR/$EXPORT_PRESET_DIR/"*
 
-echo $EXPORT_PRESET_PATH
+# Call the function to export the project
+export_godot_project "$PROJECT_CONFIG_FILE" "$PRESET_NAME" "$EXPORT_PRESET_PATH"
+
+# Output the export path
+echo "$EXPORT_PRESET_PATH"
