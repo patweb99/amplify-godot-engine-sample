@@ -32,8 +32,13 @@ frontend:
                 - ./scripts/export_game_client $GAME_DIR $EXPORT_DIR Web $VERSION
 
                 # Export 'macOS' game client
-                - MACOS_FILE=$(./scripts/export_game_client $GAME_DIR $EXPORT_DIR macOS $VERSION | tail -n 1)
-                - ./scripts/publish_game_client "$GAME_DIR/$MACOS_FILE" $BUCKET_NAME MacOS
+                - ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR MacOS $VERSION $BUCKET_NAME
+
+                # Export 'Linux' game client
+                #- ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Linux $VERSION $BUCKET_NAME
+
+                # Export 'Windows' game client
+                #- ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Windows $VERSION $BUCKET_NAME
 
     artifacts:
         baseDirectory: game-client/build/Web

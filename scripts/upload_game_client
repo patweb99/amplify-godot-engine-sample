@@ -1,0 +1,54 @@
+#!/bin/bash
+# This script uploads a file to an Amazon S3 bucket
+
+# Function to display usage information
+usage() {
+    echo "Usage: $0 <file_path> <bucket_name> <bucket_path>"
+    echo
+    echo "Arguments:"
+    echo "  file_path    Path to the file to upload"
+    echo "  bucket_name  Name of the S3 bucket"
+    echo "  bucket_path  Path within the S3 bucket where the file will be uploaded"
+    echo
+    echo "Example:"
+    echo "  $0 /path/to/local/file.txt my-bucket-name folder/subfolder"
+}
+
+# Check if the correct number of arguments is provided
+if [ "$#" -ne 3 ]; then
+    echo "Error: Incorrect number of arguments"
+    usage
+    exit 1
+fi
+
+# Assign arguments to variables
+FILE_PATH=$1        # Path to the file to upload
+BUCKET_NAME=$2      # Name of the S3 bucket
+BUCKET_PATH=$3      # Path within the S3 bucket where the file will be uploaded
+
+# Extract the file name from the file path
+FILE_NAME=$(basename "$FILE_PATH")
+
+# Check if the file exists
+if [ ! -f "$FILE_PATH" ]; then
+    echo "Error: File does not exist: $FILE_PATH"
+    exit 1
+fi
+
+# Check if AWS CLI is installed
+if ! command -v aws &> /dev/null; then
+    echo "Error: AWS CLI is not installed or not in the PATH"
+    exit 1
+fi
+
+# Upload the file to S3
+echo "Uploading $FILE_NAME to s3://$BUCKET_NAME/$BUCKET_PATH/"
+aws s3 cp "$FILE_PATH" "s3://$BUCKET_NAME/$BUCKET_PATH/$FILE_NAME"
+
+# Check the exit status of the aws command
+if [ $? -eq 0 ]; then
+    echo "Upload successful"
+else
+    echo "Error: Upload failed"
+    exit 1
+fi
