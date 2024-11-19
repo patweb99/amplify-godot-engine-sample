@@ -36,7 +36,7 @@ func _on_sign_in_input_changed(new_text: String) -> void:
 func _on_sign_in_button_pressed():
 	sign_in_button.disabled = true
 	
-	var response = await amplify.auth.sign_in_with_user_password(sign_in_e_mail.text, sign_in_password.password.text)
+	var response = await amplify.auth.sign_in_with_username_password(sign_in_e_mail.text, sign_in_password.password.text)
 	if response.success and sign_in_remember_me.toggled:
 		config[CONFIG_EMAIL] = sign_in_e_mail.text
 		_save_user_config()
@@ -248,7 +248,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if sign_out.visible:
 		var time_dictionary = Time.get_datetime_dict_from_unix_time(
-			amplify.auth.get_user_access_token_expiration_time()-Time.get_unix_time_from_system()
+			amplify._auth.get_user_access_token_expiration_time()-Time.get_unix_time_from_system()
 		)
 		var time = "%d:%d:%d" % [time_dictionary["hour"], time_dictionary["minute"], time_dictionary["second"]]
 		sign_out_refresh_counter.text = time

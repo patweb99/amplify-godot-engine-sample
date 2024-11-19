@@ -1,39 +1,57 @@
-extends Node
 class_name AWSAmplifyData
+extends AWSAmplifyBase
 
-const CONFIG_URL = "url"
+class CONFIG:
+	const URL = "url"
 
-var auth: AWSAmplifyAuth
-var config: Dictionary
-var endpoint: String
+enum GraphQLMethod {
+	QUERY,
+	MUTATION,
+	SUBSCRIPTION
+}
 
-func _init(_auth: AWSAmplifyAuth, _config: Dictionary) -> void:
-	auth = _auth
-	config = _config
-	endpoint = config[CONFIG_URL]
+var _client: AWSAmplifyClient
+var _auth: AWSAmplifyAuth
+var _config: Dictionary
+var _endpoint: String
 
-func mutate(query, operation_name):
-	var headers = [
+func make_graphql_query(operation, operation_name = "MyQuery", authenticated: bool = true):
+	return await make_graphql_request(operation, operation_name, GraphQLMethod.QUERY, authenticated)
+
+func make_graphql_mutation(operation, operation_name = "MyMutation", authenticated: bool = true):
+	return await make_graphql_request(operation, operation_name, GraphQLMethod.MUTATION, authenticated)
+
+func make_graphql_subscription(operation, operation_name = "MySubscription", authenticated: bool = true):
+	return await make_graphql_request(operation, operation_name, GraphQLMethod.SUBSCRIPTION, authenticated)
+
+func make_graphql_request(operation, operation_name, method: GraphQLMethod, authenticated: bool = true):
+	var headers = [ 
 		"Content-Type: application/json"
 	]
 	
-	var body = JSON.stringify({
-		"query": "mutation " + operation_name + " " + query,
+	var operation_type: String
+	if method == GraphQLMethod.QUERY:
+		operation_type = "query"
+	elif method == GraphQLMethod.MUTATION:
+		operation_type = "mutation"
+	elif method == GraphQLMethod.SUBSCRIPTION:
+		operation_type = "subscription"
+	else:
+		assert("GraphQL method must be one of: query, muration or subscription")
+	
+	var body = {
+		"query": """%s %s { \n	%s \n}""" % [operation_type, operation_name, operation],
 		"variables": null,
 		"operationName": operation_name
-	})
+	}
 	
-	return await auth.make_authenticated_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+	if authenticated:
+		return await _auth.make_authenticated_http_post(_endpoint, headers, body)
+	else:
+		return await _client.make_http_post(_endpoint, headers, body)
 
-func query(query, operation_name):
-	var headers = [
-		"Content-Type: application/json"
-	]
-	
-	var body = JSON.stringify({
-		"query": "query " + operation_name + " " + query,
-		"variables": null,
-		"operationName": operation_name
-	})
-	
-	return await auth.make_authenticated_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+func _init(client: AWSAmplifyClient, auth: AWSAmplifyAuth, config: Dictionary) -> void:
+	_client = client
+	_auth = auth
+	_config = config
+	_endpoint = _config[CONFIG.URL]
