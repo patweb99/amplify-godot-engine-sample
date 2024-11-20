@@ -46,13 +46,16 @@ func _on_music_player_check_box_toggled(toggled_on: bool) -> void:
 func _on_button_pressed() -> void:
 	aws_amplify.auth.global_sign_out()
 
+
+func _on_user_attributes_update_button_pressed() -> void:
+	$MobTimer.start()
+	$UserInterface/UserAttributes.visible = false
+
+
 func _on_user_attributes_button_pressed(toggled) -> void:
 	if toggled:
 		$MobTimer.stop()
 		$UserInterface/UserAttributes.visible = true
 	else:
-		_on_update_pressed()
-
-func _on_update_pressed() -> void:
-	$MobTimer.start()
-	$UserInterface/UserAttributes.visible = false
+		$MobTimer.start()
+		$UserInterface/UserAttributes.visible = false

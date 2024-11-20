@@ -204,35 +204,22 @@ theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 20
 text = "Music On/Off"
 
-[node name="Disconnect" type="Button" parent="UserInterface"]
-[node name="Disconnect" type="Button" parent="UserInterface"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -147.0
-offset_top = -39.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_font_sizes/font_size = 24
-text = "Disconnect"
-
 [node name="UserAttributesButton" type="Button" parent="UserInterface"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -77.0
-offset_bottom = 46.0
+offset_left = -93.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 62.0
 grow_horizontal = 0
 focus_mode = 0
 theme_override_font_sizes/font_size = 30
 toggle_mode = true
 shortcut_feedback = false
 shortcut_in_tooltip = false
-text = "User"
+text = "User Attributes"
 
 [node name="UserAttributes" parent="UserInterface" instance=ExtResource("6_rlj8c")]
 visible = false
@@ -245,8 +232,6 @@ offset_bottom = 224.0
 [connection signal="hit" from="Player" to="." method="_on_player_hit"]
 [connection signal="timeout" from="MobTimer" to="." method="_on_mob_timer_timeout"]
 [connection signal="toggled" from="UserInterface/MusicPlayerContainer/MusicPlayerCheckBox" to="." method="_on_music_player_check_box_toggled"]
-[connection signal="pressed" from="UserInterface/Disconnect" to="." method="_on_button_pressed"]
-
 [connection signal="toggled" from="UserInterface/UserAttributesButton" to="." method="_on_user_attributes_button_pressed"]
 [connection signal="pressed" from="UserInterface/UserAttributes/Update" to="." method="_on_update_pressed"]
 
