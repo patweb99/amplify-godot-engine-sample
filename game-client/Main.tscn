@@ -201,7 +201,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 25
 
-[node name="RetryLabel" type="Label" parent="UserInterface/Retry"]
+[node name="Label" type="Label" parent="UserInterface/Retry"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -219,15 +219,43 @@ text = "Press Space or Enter to retry"
 horizontal_alignment = 1
 vertical_alignment = 2
 
-[node name="Button" type="Button" parent="UserInterface"]
+[node name="MusicPlayerContainer" type="HBoxContainer" parent="UserInterface"]
 layout_mode = 1
-offset_left = 13.0
-offset_top = 64.0
-offset_right = 160.0
-offset_bottom = 103.0
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -196.0
+offset_top = -56.0
+offset_right = -34.0
+offset_bottom = -30.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="MusicPlayerCheckBox" type="CheckBox" parent="UserInterface/MusicPlayerContainer"]
+layout_mode = 2
+
+[node name="MusicPlayerLabel" type="Label" parent="UserInterface/MusicPlayerContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 20
+text = "Music On/Off"
+
+[node name="DisconnectButton" type="Button" parent="UserInterface"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -163.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 62.0
+grow_horizontal = 0
 theme_override_font_sizes/font_size = 24
 text = "Disconnect"
 
 [connection signal="hit" from="Player" to="." method="_on_player_hit"]
 [connection signal="timeout" from="MobTimer" to="." method="_on_mob_timer_timeout"]
-[connection signal="pressed" from="UserInterface/Button" to="." method="_on_button_pressed"]
+[connection signal="toggled" from="UserInterface/MusicPlayerContainer/MusicPlayerCheckBox" to="." method="_on_music_player_check_box_toggled"]
+[connection signal="pressed" from="UserInterface/DisconnectButton" to="." method="_on_disconnect_button_pressed"]

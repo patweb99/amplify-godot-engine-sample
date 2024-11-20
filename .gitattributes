@@ -1,0 +1,6 @@
+*.godot diff=text
+*.cfg diff=text
+*.gd diff=text
+*.tscn diff=text
+*.import diff=text
+*.tres diff=text
