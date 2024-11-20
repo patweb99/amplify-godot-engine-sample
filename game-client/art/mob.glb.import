@@ -31,21 +31,6 @@ animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
 import_script/path=""
-_subresources={
-"materials": {
-"mob_body": {
-"use_external/enabled": true,
-"use_external/path": "res://art/mob_body.tres"
-},
-"mob_eye": {
-"use_external/enabled": true,
-"use_external/path": "res://art/mob_eye.tres"
-},
-"pupil": {
-"use_external/enabled": true,
-"use_external/path": "res://art/pupil.tres"
-}
-}
-}
+_subresources={}
 gltf/naming_version=0
 gltf/embedded_image_handling=1

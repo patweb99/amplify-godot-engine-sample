@@ -1,8 +1,0 @@
-[gd_resource type="StandardMaterial3D" format=3 uid="uid://bldc350uiybkj"]
-
-[resource]
-resource_name = "eye"
-cull_mode = 2
-albedo_color = Color(0.960375, 0.960375, 0.960375, 1)
-roughness = 0.5
-emission_enabled = true
