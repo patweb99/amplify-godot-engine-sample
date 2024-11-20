@@ -1,12 +1,12 @@
-extends Container
 class_name UserAttributes
+extends ColorRect
 
 class USER_ATTRIBUTES:
 	const NAME = "preferred_username"
 	const COLOR = "custom:color"
-	
-@onready var player_name: LineEdit = $Name
-@onready var player_color: ColorPickerButton = $Color
+
+@onready var player_name: LineEdit = %Name
+@onready var player_color: ColorPickerButton = %Color
 
 func _ready() -> void:
 	aws_amplify.auth.user_changed.connect(_on_user_changed)
