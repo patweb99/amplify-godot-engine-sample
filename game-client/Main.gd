@@ -2,8 +2,10 @@ extends Node
 
 @export var mob_scene: PackedScene
 
+
 @onready var score_label: Label = %ScoreLabel
 @onready var leaderboard: ItemList = %Leaderboard
+
 
 func _ready():
 	$UserInterface/Retry.hide()
@@ -38,6 +40,14 @@ func _on_player_hit():
 	await _update_player_score()
 	await _refresh_leaderboard()
 
+
+func _on_music_player_check_box_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		MusicPlayer.play()
+	else:
+		MusicPlayer.stop()
+
+
 func _update_player_score():	
 	var current_score = int(score_label.score)
 	var username = await aws_amplify.auth.get_user_attribute(AWSAmplify.USER_ATTRIBUTES.EMAIL)
@@ -51,6 +61,7 @@ func _update_player_score():
 	else:
 		print("Error: " + get_score_response.message)
 		
+
 func _refresh_leaderboard():
 	var request = """listScoreByLeaderboardAndScore(leaderboard: "%s", sortDirection: DESC, limit:%s) { items { score username } }""" % ["global", "30"]
 	var response = await aws_amplify.data.make_graphql_query(request)
@@ -63,5 +74,6 @@ func _refresh_leaderboard():
 			var item = items[i]
 			leaderboard.add_item("%s | %s %s" % [str(i+1), item.username, item.score])
 
-func _on_button_pressed() -> void:
+
+func _on_disconnect_button_pressed() -> void:
 	aws_amplify.auth.global_sign_out()
