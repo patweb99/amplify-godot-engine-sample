@@ -1,3 +1,8 @@
 .godot
 build
+<<<<<<< HEAD
 amplify_outputs*
+=======
+amplify_outputs*
+addons
+>>>>>>> template
