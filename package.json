@@ -4,7 +4,7 @@
   "description": "This project provides AWS Amplify and Godot Engine samples",
   "main": "index.js",
   "scripts": {
-    "sandbox": "npx ampx sandbox --outputs-out-dir game-client",
+    "sandbox": "npx ampx sandbox --outputs-out-dir game",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
