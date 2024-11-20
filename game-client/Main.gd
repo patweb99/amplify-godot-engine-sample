@@ -34,3 +34,10 @@ func _on_mob_timer_timeout():
 func _on_player_hit():
 	$MobTimer.stop()
 	$UserInterface/Retry.show()
+
+
+func _on_music_player_check_box_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		MusicPlayer.play()
+	else:
+		MusicPlayer.stop()
