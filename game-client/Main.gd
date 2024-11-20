@@ -77,3 +77,17 @@ func _refresh_leaderboard():
 
 func _on_disconnect_button_pressed() -> void:
 	aws_amplify.auth.global_sign_out()
+
+
+func _on_user_attributes_update_button_pressed() -> void:
+	$MobTimer.start()
+	$UserInterface/UserAttributes.visible = false
+
+
+func _on_user_attributes_button_pressed(toggled) -> void:
+	if toggled:
+		$MobTimer.stop()
+		$UserInterface/UserAttributes.visible = true
+	else:
+		$MobTimer.start()
+		$UserInterface/UserAttributes.visible = false

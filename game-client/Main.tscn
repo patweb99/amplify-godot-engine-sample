@@ -1,10 +1,11 @@
-[gd_scene load_steps=15 format=3 uid="uid://2y3ar4s86yra"]
+[gd_scene load_steps=16 format=3 uid="uid://2y3ar4s86yra"]
 
 [ext_resource type="Script" path="res://Main.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://dp478jyugrn7o" path="res://Player.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://ha0ar5s2c3m4" path="res://Mob.tscn" id="3"]
 [ext_resource type="Theme" uid="uid://cqquurjk1i7yw" path="res://ui_theme.tres" id="4_gnyca"]
 [ext_resource type="Script" path="res://ScoreLabel.gd" id="6"]
+[ext_resource type="PackedScene" uid="uid://bm3oa0co08npg" path="res://UserAttributes.tscn" id="6_rlj8c"]
 
 [sub_resource type="BoxShape3D" id="1"]
 size = Vector3(60, 2, 60)
@@ -252,10 +253,52 @@ offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 62.0
 grow_horizontal = 0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -163.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 62.0
+grow_horizontal = 0
 theme_override_font_sizes/font_size = 24
 text = "Disconnect"
+
+[node name="UserAttributesButton" type="Button" parent="UserInterface"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -376.0
+offset_top = 16.0
+offset_right = -176.0
+offset_bottom = 62.0
+grow_horizontal = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+toggle_mode = true
+shortcut_feedback = false
+shortcut_in_tooltip = false
+text = "User Attributes"
+
+[node name="UserAttributes" parent="UserInterface" instance=ExtResource("6_rlj8c")]
+visible = false
+custom_minimum_size = Vector2(250, 150)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -376.0
+offset_top = 80.0
+offset_right = -16.0
+offset_bottom = 230.0
+grow_horizontal = 0
+grow_vertical = 1
 
 [connection signal="hit" from="Player" to="." method="_on_player_hit"]
 [connection signal="timeout" from="MobTimer" to="." method="_on_mob_timer_timeout"]
 [connection signal="toggled" from="UserInterface/MusicPlayerContainer/MusicPlayerCheckBox" to="." method="_on_music_player_check_box_toggled"]
 [connection signal="pressed" from="UserInterface/DisconnectButton" to="." method="_on_disconnect_button_pressed"]
+[connection signal="toggled" from="UserInterface/UserAttributesButton" to="." method="_on_user_attributes_button_pressed"]
