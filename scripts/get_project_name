@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <path_to_project.godot>" >&2
+    exit 1
+fi
+
+config_file="$1"
+
+if [ ! -f "$config_file" ]; then
+    echo "Error: Config file not found: $config_file" >&2
+    exit 1
+fi
+
+name=$(awk '
+/^\[application\]/ {
+    in_application = 1
+}
+
+in_application && /^config\/name=/ {
+    gsub(/^config\/name="|"$/, "")
+    print $0
+    exit
+}
+' "$config_file")
+
+if [ -z "$name" ]; then
+    echo "Error: Project name not found in $config_file" >&2
+    exit 1
+fi
+
+echo "$name"

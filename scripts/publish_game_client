@@ -1,0 +1,80 @@
+#!/bin/bash
+# This script exports and uploads a game client to an Amazon S3 bucket
+
+# Function to display usage information
+usage() {
+    echo "Usage: $0 <project_dir> <export_dir> <preset_name> <version> <bucket_name> [platform] [project_name]"
+    echo
+    echo "Arguments:"
+    echo "  project_dir   The project directory where the 'project.godot' file is located"
+    echo "  export_dir    The base directory to export project to"
+    echo "  preset_name   The name of the export preset"
+    echo "  version       The version of the export"
+    echo "  bucket_name   Name of the S3 bucket"
+    echo "  platform      (Optional) The platform"
+    echo "  project_name  (Optional) The project name"
+}
+
+# Check if the minimum required arguments are provided
+if [ $# -lt 5 ]; then
+    echo "Error: Insufficient arguments provided."
+    usage
+    exit 1
+fi
+
+# Arguments
+PROJECT_DIR=$1
+EXPORT_DIR=$2
+PRESET_NAME=$3
+VERSION=$4
+BUCKET_NAME=$5
+PLATFORM=$6
+PROJECT_NAME=$7
+
+# Script locations
+SCRIPT_DIR="$(dirname "$0")"
+EXPORT_GAME_CLIENT="$SCRIPT_DIR/export_game_client"
+UPLOAD_GAME_CLIENT="$SCRIPT_DIR/upload_game_client"
+
+# Check if required scripts exist
+if [ ! -f "$EXPORT_GAME_CLIENT" ]; then
+    echo "Error: Export script not found: $EXPORT_GAME_CLIENT"
+    exit 1
+fi
+
+if [ ! -f "$UPLOAD_GAME_CLIENT" ]; then
+    echo "Error: Upload script not found: $UPLOAD_GAME_CLIENT"
+    exit 1
+fi
+
+# Check if project directory exists
+if [ ! -d "$PROJECT_DIR" ]; then
+    echo "Error: Project directory does not exist: $PROJECT_DIR"
+    exit 1
+fi
+
+# Export the project
+echo "Exporting game client..."
+FILE_PATH=$($EXPORT_GAME_CLIENT "$PROJECT_DIR" "$EXPORT_DIR" "$PRESET_NAME" "$VERSION" "$PLATFORM" "$PROJECT_NAME" | tail -n 1)
+
+# Check if export was successful
+if [ $? -ne 0 ] || [ -z "$FILE_PATH" ]; then
+    echo "Error: Failed to export game client"
+    exit 1
+fi
+
+echo "Game client exported successfully to: $FILE_PATH"
+
+# Upload the exported file
+echo "Uploading game client to S3..."
+UPLOAD_RESULT=$($UPLOAD_GAME_CLIENT "$PROJECT_DIR/$FILE_PATH" "$BUCKET_NAME" "$PRESET_NAME")
+
+# Check if upload was successful
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to upload game client to S3"
+    echo "$UPLOAD_RESULT"
+    exit 1
+fi
+
+echo "Game client uploaded successfully to S3"
+echo "$UPLOAD_RESULT"
