@@ -43,7 +43,7 @@ func _on_music_player_check_box_toggled(toggled_on: bool) -> void:
 		MusicPlayer.stop()
 
 
-func _on_button_pressed() -> void:
+func _on_disconnect_button_pressed() -> void:
 	aws_amplify.auth.global_sign_out()
 
 
