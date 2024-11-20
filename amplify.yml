@@ -1,7 +1,7 @@
 version: 1
 env:
   variables:
-    GAME_DIR: game-client
+    GAME_DIR: game
     EXPORT_DIR: build
     GIT_TAG: $(./scripts/get_git_tag)
     BUILD_TAG: "$AWS_BRANCH_$AWS_COMMIT_ID_b$AWS_JOB_ID"
@@ -41,7 +41,7 @@ frontend:
                 - ./scripts/publish_game_client $GAME_DIR $EXPORT_DIR Windows $VERSION $BUCKET_NAME
 
     artifacts:
-        baseDirectory: game-client/build/Web
+        baseDirectory: game/build/Web
         files:
             - '**/*'  
     cache:
