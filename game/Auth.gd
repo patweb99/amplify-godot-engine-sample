@@ -7,7 +7,7 @@ var auth_form: AuthForm
 var main: Node
 
 func _ready() -> void:
-	if aws_amplify.auth.is_user_signed_in():
+	if aws_amplify.auth.is_signed_in():
 		main = MAIN.instantiate()
 		add_child(main)
 	else:

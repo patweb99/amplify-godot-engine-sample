@@ -9,18 +9,26 @@ class HEADERS:
 		return "Authorization: Bearer " + access_token
 
 class BODY:
-	const CLIENT_ID = "ClientId"
+	const ACCESS_TOKEN = "AccessToken"
+	const ATTRIBUTE_NAME = "AttributeName"
 	const AUTH_FLOW = "AuthFlow"
 	const AUTH_PARAMETERS = "AuthParameters"
-	const USERNAME = "Username"
-	const PASSWORD = "Password"
-	const CONFIRMATION_CODE = "ConfirmationCode"
-	const USER_ATTRIBUTES = "UserAttributes"
 	const AUTHENTICATED_RESULT = "AuthenticationResult"
-	const ACCESS_TOKEN = "AccessToken"
+	const CLIENT_ID = "ClientId"
+	const CLIENT_SECRET = "ClientSecret"
+	const CLIENT_METADATA = "ClientMetadata"
+	const CONFIRMATION_CODE = "ConfirmationCode"
+	const PASSWORD = "Password"
+	const PREVIOUS_PASSWORD = "PreviousPassword"
+	const PROPOSED_PASSWORD = "ProposedPassword"
 	const REFRESH_TOKEN = "RefreshToken"
+	const USERNAME = "Username"
+	const USER_ATTRIBUTES = "UserAttributes"
+	const USER_ATTRIBUTE_NAMES = "UserAttributeNames"
 
 class USER_ATTRIBUTES:
+	static func CUSTOM(name: String):
+		return "custom:" + name
 	const NAME = "name"
 	const FAMILY_NAME = "family_name"
 	const GIVEN_NAME = "given_name"	
@@ -39,8 +47,3 @@ class USER_ATTRIBUTES:
 	const EMAIL = "email"
 	const PHONE_NUMBER = "phone_number"
 	const SUB = "sub"
-
-enum AuthMode {
-	EMAIL,
-	PHONENUMBER
-}

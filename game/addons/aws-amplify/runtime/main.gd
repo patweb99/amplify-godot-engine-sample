@@ -55,14 +55,12 @@ class CONFIG:
 	const DATA = "data"
 
 class ERROR:
-	const AUTH_NULL = "No auth module! The %s configuration file doesn't contain an auth section."
-	const DATA_NULL = "No data module! The %s configuration file doesn't contain an data section."
+	static func MODULE_NULL(name):
+		return "No %s module! The %s configuration file doesn't contain an auth section." % name
+	var AUTH_NULL = MODULE_NULL(CONFIG.AUTH)
+	var DATA_NULL = MODULE_NULL(CONFIG.DATA)
 
 const DEFAULT_CONFIG_PATH := "res://amplify_outputs.json"
-
-const AWSAmplifyClientClass := preload("./lib/client.gd")
-const AWSAmplifyAuthClass := preload("./lib/auth.gd")
-const AWSAmplifyDataClass := preload("./lib/data.gd")
 
 var config_path: String
 var config: Dictionary
@@ -74,13 +72,13 @@ func _init(_config_path = DEFAULT_CONFIG_PATH):
 	config_path = _config_path
 	config = _get_config(_config_path)
 	
-	http = AWSAmplifyClientClass.new()
+	http = AWSAmplifyClient.new()
 	
 	if config.has(CONFIG.AUTH):
-		auth = AWSAmplifyAuthClass.new(http, config[CONFIG.AUTH])
+		auth = AWSAmplifyAuth.new(http, config[CONFIG.AUTH])
 		
 		if config.has(CONFIG.DATA):
-			data = AWSAmplifyDataClass.new(http, auth, config[CONFIG.DATA])
+			data = AWSAmplifyData.new(http, auth, config[CONFIG.DATA])
 
 func _ready():
 	add_child(http)

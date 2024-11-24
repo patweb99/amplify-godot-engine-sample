@@ -26,7 +26,7 @@ func _on_update_pressed() -> void:
 	var user_attributes = {}
 	user_attributes[USER_ATTRIBUTES.NAME] = player_name.text
 	user_attributes[USER_ATTRIBUTES.COLOR] = player_color.color.to_html()
-	var response = await aws_amplify.auth.add_user_attributes(user_attributes)
+	var response = await aws_amplify.auth.update_user_attributes(user_attributes)
 	if not response.success:
 		print(response)
 
