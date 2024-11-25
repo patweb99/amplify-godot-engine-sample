@@ -16,7 +16,7 @@ func make_http_delete(endpoint, headers, body):
 func make_http_request(endpoint, headers, method, body):
 	var http_request = HTTPRequest.new()
 	add_child(http_request)
-	
+
 	var http_request_body: String
 	if body is Dictionary:
 		http_request_body = JSON.stringify(body)
@@ -24,19 +24,19 @@ func make_http_request(endpoint, headers, method, body):
 		http_request_body = body
 	else:
 		assert(false, "body must be either Dictionary or String!")
-	
+
 	var error = http_request.request(endpoint, headers, method, http_request_body)
 	if error != OK:
 		return _generate_response_json(false, "Failed to send request", 400, null, error)
-		
+
 	var response = await http_request.request_completed
 	http_request.queue_free()
-	
+
 	var result = response[0]
 	var response_code = response[1]
 	var response_headers = response[2]
 	var response_body = response[3]
-	
+
 	if result == HTTPRequest.RESULT_SUCCESS:
 		var json = JSON.parse_string(response_body.get_string_from_utf8())
 		if !json:
@@ -48,7 +48,7 @@ func make_http_request(endpoint, headers, method, body):
 		return _generate_response_json(true, json, response_code, response_headers, result)
 	else:
 		return _generate_response_json(false, response_body, response_code, response_headers, result)
-		
+
 func _generate_response_json(success, response_body, response_code, response_headers, result):
 	return {
 		"success": success,

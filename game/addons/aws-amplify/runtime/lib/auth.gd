@@ -403,7 +403,7 @@ func refresh_token(refresh_token):
 	return response
 
 #
-# GetTokenExpirationTime
+# GetToken
 #
 
 func get_token(name):
@@ -413,7 +413,7 @@ func get_token(name):
 		return null
 
 #
-#
+# GetTokenExpirationTime
 #
 
 func get_token_expiration_time() -> int:
