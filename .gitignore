@@ -2,3 +2,5 @@ node_modules
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+.$branches.drawio.bkp
+.$branches.drawio.dtmp
