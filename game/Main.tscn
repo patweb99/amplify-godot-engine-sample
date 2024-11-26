@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://ha0ar5s2c3m4" path="res://Mob.tscn" id="3"]
 [ext_resource type="Theme" uid="uid://cqquurjk1i7yw" path="res://ui_theme.tres" id="4_gnyca"]
 [ext_resource type="Script" path="res://ScoreLabel.gd" id="6"]
-[ext_resource type="PackedScene" uid="uid://bm3oa0co08npg" path="res://UserAttributes.tscn" id="6_rlj8c"]
+[ext_resource type="PackedScene" uid="uid://bm3oa0co08npg" path="res://PlayerAttributes.tscn" id="6_rlj8c"]
 
 [sub_resource type="BoxShape3D" id="1"]
 size = Vector3(60, 2, 60)
@@ -256,7 +256,7 @@ grow_horizontal = 0
 theme_override_font_sizes/font_size = 24
 text = "Disconnect"
 
-[node name="UserAttributesButton" type="Button" parent="UserInterface"]
+[node name="PlayerAttributesButton" type="Button" parent="UserInterface"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -273,7 +273,7 @@ shortcut_feedback = false
 shortcut_in_tooltip = false
 text = "User Attributes"
 
-[node name="UserAttributes" parent="UserInterface" instance=ExtResource("6_rlj8c")]
+[node name="PlayerAttributes" parent="UserInterface" instance=ExtResource("6_rlj8c")]
 visible = false
 custom_minimum_size = Vector2(250, 150)
 layout_mode = 1
@@ -293,4 +293,4 @@ grow_vertical = 1
 [connection signal="timeout" from="MobTimer" to="." method="_on_mob_timer_timeout"]
 [connection signal="toggled" from="UserInterface/MusicPlayerContainer/MusicPlayerCheckBox" to="." method="_on_music_player_check_box_toggled"]
 [connection signal="pressed" from="UserInterface/DisconnectButton" to="." method="_on_disconnect_button_pressed"]
-[connection signal="toggled" from="UserInterface/UserAttributesButton" to="." method="_on_user_attributes_button_pressed"]
+[connection signal="toggled" from="UserInterface/PlayerAttributesButton" to="." method="_on_user_attributes_button_pressed"]

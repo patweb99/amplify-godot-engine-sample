@@ -1,5 +1,5 @@
 class_name AWSAmplify
-extends AWSAmplifyBase
+extends Node
 
 ## AWS Amplify SDK
 ##
@@ -64,7 +64,7 @@ const DEFAULT_CONFIG_PATH := "res://amplify_outputs.json"
 
 var config_path: String
 var config: Dictionary
-var http: AWSAmplifyClient
+var client: AWSAmplifyClient
 var auth: AWSAmplifyAuth
 var data: AWSAmplifyData
 
@@ -72,16 +72,16 @@ func _init(_config_path = DEFAULT_CONFIG_PATH):
 	config_path = _config_path
 	config = _get_config(_config_path)
 	
-	http = AWSAmplifyClient.new()
+	client = AWSAmplifyClient.new()
 	
 	if config.has(CONFIG.AUTH):
-		auth = AWSAmplifyAuth.new(http, config[CONFIG.AUTH])
+		auth = AWSAmplifyAuth.new(client, config[CONFIG.AUTH])
 		
 		if config.has(CONFIG.DATA):
-			data = AWSAmplifyData.new(http, auth, config[CONFIG.DATA])
+			data = AWSAmplifyData.new(client, auth, config[CONFIG.DATA])
 
 func _ready():
-	add_child(http)
+	add_child(client)
 	
 	if auth:
 		add_child(auth)

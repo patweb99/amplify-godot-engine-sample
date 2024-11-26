@@ -4,7 +4,7 @@ class_name AuthForm
 const USER_CONFIG_PATH = "user://.config"
 const CONFIG_EMAIL = "email"
 const OPTIONS_USER_ATTRIBUTES = AWSAmplifyAuth.AuthOptions.USER_ATTRIBUTES
-const USER_ATTRIBUTES = AWSAmplifyAuth.USER_ATTRIBUTES
+const UserAttributes = AWSAmplifyAuth.UserAttributes
 
 var amplify: AWSAmplify = aws_amplify
 var config: Dictionary = {}
@@ -42,12 +42,13 @@ func _on_sign_in_button_pressed():
 		sign_in_username.text, 
 		sign_in_password.password.text
 	)
-	if response.success and sign_in_remember_me.toggled:
+	if response.result:
 		config[CONFIG_EMAIL] = sign_in_username.text
-		_save_user_config()
+		if sign_in_remember_me.toggled:
+			_save_user_config()
 		sign_in_message.set_success_message("You are signed-in!")
 	else:
-		sign_in_message.set_error_message(response.response_body.message)
+		sign_in_message.set_error_message(response.error.message)
 		
 	sign_in_button.disabled = false
 		
@@ -70,11 +71,11 @@ func _on_forgot_password_input_changed(new_text: String) -> void:
 	
 func _forgot_password_confirm_link_pressed() -> void:
 	var response = await amplify.auth.reset_password(sign_in_username.text)
-	if response.success:
+	if response.result:
 		sign_in.hide()
 		forgot_password_confirm.show()
 	else:
-		sign_in_message.set_error_message(response.response_body.message)
+		sign_in_message.set_error_message(response.error.message)
 
 func _on_forgot_password_cancel_button_pressed() -> void:
 	sign_in.show()
@@ -90,11 +91,11 @@ func _forgot_password_confirm_button_pressed() -> void:
 			forgot_password_confirm_password.password.text,
 			forgot_password_confirm_code.text, 
 		)
-		if response.success:
+		if response.status == AWSAmplifyClient.ResponseStatus.SUCCESS:
 			sign_in.show()
 			forgot_password_confirm.hide()
 		else:
-			forgot_password_confirm_message.set_error_message(response.response_body.message)
+			forgot_password_confirm_message.set_error_message(response.error.message)
 	forgot_password_confirm_button.disabled = false
 
 func _forgot_password_confirm_send_code_link_pressed() -> void:
@@ -137,11 +138,11 @@ func _on_sign_up_button_pressed() -> void:
 		sign_up_username.text, 
 		sign_up_password.password.text
 	)
-	if response.success:
+	if response.result:
 		sign_up.hide()
 		sign_up_confirm.show()
 	else:
-		sign_up_message.set_error_message(response.response_body.message)
+		sign_up_message.set_error_message(response.error.message)
 		
 	sign_up_button.disabled = false
 	
@@ -178,22 +179,22 @@ func _on_sign_up_confirm_button_pressed() -> void:
 		sign_up_confirm_message.set_error_message("Both passwords do not match!")
 	else:
 		var response = await amplify.auth.confirm_sign_up(sign_up_confirm_username.text, sign_up_confirm_code.text)
-		if response.success:
+		if response.status == AWSAmplifyClient.ResponseStatus.SUCCESS:
 			sign_up.show()
 			sign_up_confirm.hide()
 			sign_in_username.text = sign_up_confirm_username.text
 			auth_tab.current_tab = 0
 		else:
-			sign_up_confirm_message.set_error_message(response.response_body.message)
+			sign_up_confirm_message.set_error_message(response.error.message)
 			
 	sign_up_confirm_button.disabled = true
 	
 func _on_sign_up_confirm_resend_code_link_pressed() -> void:
 	var response = await amplify.auth.resend_sign_up_code(sign_up_confirm_username.text)
-	if response.success:
-		sign_up_confirm_message.set_success_message("Code re-sent!")
+	if response.result:
+		sign_up_confirm_message.set_success_message("Code re-sent to %s!" % [response.result.CodeDeliveryDetails.Destination])
 	else:
-		sign_up_confirm_message.set_error_message(response.response_body.message)
+		sign_up_confirm_message.set_error_message(response.error.message)
 
 func _on_sign_up_confirm_visibility_changed() -> void:
 	if sign_up_confirm.visible == true:
@@ -238,10 +239,14 @@ func _on_user_signed_out(user_attriutes):
 	sign_out.hide()
 
 func _on_sign_out_button_pressed() -> void:
-	await amplify.auth.sign_out(true)
+	var response = await amplify.auth.sign_out(true)
+	if response.error:
+		print(response.error.message)
 
 func _on_sign_out_refresh_link_pressed() -> void:
-	await amplify.auth.refresh_user(true, true)
+	var response = await amplify.auth.refresh_user(true, true)
+	if response.error:
+		print(response.error.message)
 
 # Ready
 

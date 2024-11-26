@@ -1,9 +1,5 @@
-class_name UserAttributes
+class_name PlayerAttributes
 extends ColorRect
-
-class USER_ATTRIBUTES:
-	const NAME = "preferred_username"
-	const COLOR = "custom:color"
 
 @onready var player_name: LineEdit = %Name
 @onready var player_color: ColorPickerButton = %Color
@@ -24,17 +20,20 @@ func _exit_tree() -> void:
 	
 func _on_update_pressed() -> void:
 	var user_attributes = {}
-	user_attributes[USER_ATTRIBUTES.NAME] = player_name.text
-	user_attributes[USER_ATTRIBUTES.COLOR] = player_color.color.to_html()
+	user_attributes[UserAttributes.PREFERRED_NAME] = player_name.text
+	user_attributes[UserAttributesColor] = player_color.color.to_html()
 	var response = await aws_amplify.auth.update_user_attributes(user_attributes)
-	if not response.success:
-		print(response)
+	if response.error:
+		print(response.error.message)
 
 func _on_user_changed(user_attributes) -> void:
 	_update_user_attributes(user_attributes)
 	
 func _update_user_attributes(user_attributes) -> void:
-	if user_attributes.has(USER_ATTRIBUTES.NAME):
-		player_name.text = user_attributes[USER_ATTRIBUTES.NAME]
-	if user_attributes.has(USER_ATTRIBUTES.COLOR):
-		player_color.color = Color(user_attributes[USER_ATTRIBUTES.COLOR])
+	if user_attributes.has(UserAttributes.PREFERRED_NAME):
+		player_name.text = user_attributes[UserAttributes.PREFERRED_NAME]
+	if user_attributes.has(UserAttributesColor):
+		player_color.color = Color(user_attributes[UserAttributesColor])
+
+const UserAttributes = AWSAmplifyAuth.UserAttributes
+var UserAttributesColor = UserAttributes.CUSTOM("color")

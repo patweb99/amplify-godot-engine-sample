@@ -51,44 +51,47 @@ func _on_music_player_check_box_toggled(toggled_on: bool) -> void:
 
 func _update_player_score():	
 	var current_score = int(score_label.score)
-	var username = await aws_amplify.auth.get_user_attribute(AWSAmplify.USER_ATTRIBUTES.EMAIL)
-	var get_score_response = await aws_amplify.data.make_graphql_query("""getScore(leaderboard: "%s", username: "%s") { score }""" % ["global", username], "GetScore")
+	var username = await aws_amplify.auth.get_user_attribute(AWSAmplifyAuth.UserAttributes.EMAIL)
+	var get_score_response = await aws_amplify.data.query("""getScore(leaderboard: "%s", username: "%s") { score }""" % ["global", username], "GetScore")
 
-	if get_score_response.success:
-		if get_score_response.response_body.data.getScore == null:
-			await aws_amplify.data.make_graphql_mutation("""createScore(input: {leaderboard: "%s", score: %s, username: "%s"}) { createdAt }""" % ["global", str(current_score), username], "CreateScore")
-		elif int(get_score_response.response_body.data.getScore.score) < current_score:
-			await aws_amplify.data.make_graphql_mutation("""updateScore(input: {leaderboard: "%s", score: %s, username: "%s"}) { createdAt }""" % ["global", str(current_score), username], "UpdateScore")
+	if get_score_response.result:
+		if get_score_response.result.data.getScore == null:
+			await aws_amplify.data.mutation("""createScore(input: {leaderboard: "%s", score: %s, username: "%s"}) { createdAt }""" % ["global", str(current_score), username], "CreateScore")
+		elif int(get_score_response.result.data.getScore.score) < current_score:
+			await aws_amplify.data.mutation("""updateScore(input: {leaderboard: "%s", score: %s, username: "%s"}) { createdAt }""" % ["global", str(current_score), username], "UpdateScore")
 	else:
-		print("Error: " + get_score_response.message)
+		print("Error: " + get_score_response.error.message)
 		
 
 func _refresh_leaderboard():
 	var request = """listScoreByLeaderboardAndScore(leaderboard: "%s", sortDirection: DESC, limit:%s) { items { score username } }""" % ["global", "30"]
-	var response = await aws_amplify.data.make_graphql_query(request)
-	var json = response.response_body
+	var response = await aws_amplify.data.query(request)
 
-	if json.has("data"):
-		var items = json.data.listScoreByLeaderboardAndScore.items
+	if response.result and response.result.has("data"):
+		var items = response.result.data.listScoreByLeaderboardAndScore.items
 		leaderboard.clear()
 		for i in items.size():
 			var item = items[i]
 			leaderboard.add_item("%s | %s %s" % [str(i+1), item.username, item.score])
+	else:
+		print(response.error.message)
 
 
 func _on_disconnect_button_pressed() -> void:
-	aws_amplify.auth.global_sign_out()
+	var response = await aws_amplify.auth.sign_out(true)
+	if response.error:
+		print(response.error.message)
 
 
 func _on_user_attributes_update_button_pressed() -> void:
 	$MobTimer.start()
-	$UserInterface/UserAttributes.visible = false
+	$UserInterface/PlayerAttributes.visible = false
 
 
 func _on_user_attributes_button_pressed(toggled) -> void:
 	if toggled:
 		$MobTimer.stop()
-		$UserInterface/UserAttributes.visible = true
+		$UserInterface/PlayerAttributes.visible = true
 	else:
 		$MobTimer.start()
-		$UserInterface/UserAttributes.visible = false
+		$UserInterface/PlayerAttributes.visible = false

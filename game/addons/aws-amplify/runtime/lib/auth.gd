@@ -1,5 +1,5 @@
-class_name AWSAmplifyAuth  
-extends AWSAmplifyBase
+class_name AWSAmplifyAuth
+extends Node
 
 signal user_signed_in
 signal user_changed
@@ -28,8 +28,8 @@ class AuthSignUpOutput:
 func sign_up(username, password, options: Dictionary = {}):
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("SignUp"),
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("SignUp"),
 	]
 
 	var user_attributes = _options_to_dictionary(AuthOptions.USER_ATTRIBUTES, options)
@@ -37,17 +37,17 @@ func sign_up(username, password, options: Dictionary = {}):
 	user_attributes[username_attribute] = username
 	
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.USERNAME: username,
-		BODY.PASSWORD: password,
-		BODY.USER_ATTRIBUTES: _dictionary_to_array(user_attributes)
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.USERNAME: username,
+		Body.PASSWORD: password,
+		Body.USER_ATTRIBUTES: _dictionary_to_array(user_attributes)
 	}
 
-	var response = await _client.make_http_post(_endpoint, headers, body)
+	var response = await _client.post_json(_endpoint, headers, body)
 	
-	if response.success:
+	if response.status == ResponseStatus.SUCCESS:
 		user_signed_up.emit()
-
+		
 	return response
 
 #
@@ -57,18 +57,18 @@ func sign_up(username, password, options: Dictionary = {}):
 func confirm_sign_up(username: String, confirmation_code: String, options: Dictionary = {}):
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("ConfirmSignUp")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("ConfirmSignUp")
 	]
 
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.USERNAME: username,
-		BODY.CONFIRMATION_CODE: confirmation_code,
-		BODY.USER_ATTRIBUTES: _options_to_array(AuthOptions.USER_ATTRIBUTES, options)
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.USERNAME: username,
+		Body.CONFIRMATION_CODE: confirmation_code,
+		Body.USER_ATTRIBUTES: _options_to_array(AuthOptions.USER_ATTRIBUTES, options)
 	}
 
-	return await _client.make_http_post(_endpoint, headers, body)
+	return await _client.post_json(_endpoint, headers, body)
 
 #
 # ResendSignUpCode
@@ -77,17 +77,17 @@ func confirm_sign_up(username: String, confirmation_code: String, options: Dicti
 func resend_sign_up_code(username, options: Dictionary = {}):
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("ResendConfirmationCode")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("ResendConfirmationCode")
 	]
 
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.USERNAME: username,
-		BODY.USER_ATTRIBUTES: _options_to_array(AuthOptions.USER_ATTRIBUTES, options)
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.USERNAME: username,
+		Body.USER_ATTRIBUTES: _options_to_array(AuthOptions.USER_ATTRIBUTES, options)
 	}
 	
-	return await _client.make_http_post(_endpoint, headers, body)
+	return await _client.post_json(_endpoint, headers, body)
 
 #
 # IsSignedIn
@@ -95,8 +95,8 @@ func resend_sign_up_code(username, options: Dictionary = {}):
 
 func is_signed_in():
 	return (
-		_tokens.has(TOKEN.ACCESS_TOKEN) && 
-		_token_expiration_time(_tokens[TOKEN.ACCESS_TOKEN]) > Time.get_unix_time_from_system()
+		_tokens.has(Token.ACCESS_TOKEN) && 
+		_token_expiration_time(_tokens[Token.ACCESS_TOKEN]) > Time.get_unix_time_from_system()
 	)
 
 #
@@ -106,27 +106,26 @@ func is_signed_in():
 func sign_in(username, password, options: Dictionary = {}):
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("InitiateAuth")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("InitiateAuth")
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.AUTH_FLOW: "USER_PASSWORD_AUTH",
-		BODY.AUTH_PARAMETERS: {
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.AUTH_FLOW: "USER_PASSWORD_AUTH",
+		Body.AUTH_PARAMETERS: {
 			"USERNAME": username,
 			"PASSWORD": password
 		},
-		BODY.USER_ATTRIBUTES: _options_to_array(AuthOptions.USER_ATTRIBUTES, options)
+		Body.USER_ATTRIBUTES: _options_to_array(AuthOptions.USER_ATTRIBUTES, options)
 	}
 
-	var response = await _client.make_http_post(_endpoint, headers, body)
-	
-	if response.success:
-		var response_body = response.response_body
-		if response_body.has(BODY.AUTHENTICATED_RESULT) and response_body[BODY.AUTHENTICATED_RESULT].has(BODY.ACCESS_TOKEN):
+	var response = await _client.post_json(_endpoint, headers, body)
+		
+	if response.status == ResponseStatus.SUCCESS:
+		if response.result.has(Body.AUTHENTICATED_RESULT) and response.result[Body.AUTHENTICATED_RESULT].has(Body.ACCESS_TOKEN):
 			
-			var authenticated_result = response_body[BODY.AUTHENTICATED_RESULT]
+			var authenticated_result = response.result[Body.AUTHENTICATED_RESULT]
 			_tokens.set_all(authenticated_result)
 
 			var user_attributes = await fetch_user_attributes()
@@ -145,17 +144,17 @@ func sign_in(username, password, options: Dictionary = {}):
 func reset_password(username, options: Dictionary = {}):
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("ForgotPassword")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("ForgotPassword")
 	]
 
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.USERNAME: username,
-		BODY.USER_ATTRIBUTES: _options_to_array(AuthOptions.USER_ATTRIBUTES, options)
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.USERNAME: username,
+		Body.USER_ATTRIBUTES: _options_to_array(AuthOptions.USER_ATTRIBUTES, options)
 	}
 
-	return await _client.make_http_post(_endpoint, headers, body)
+	return await _client.post_json(_endpoint, headers, body)
 
 #
 # ConfirmResetPassword
@@ -164,18 +163,18 @@ func reset_password(username, options: Dictionary = {}):
 func confirm_reset_password(username, new_password, confirmation_code, options: Dictionary = {}):
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("ConfirmForgotPassword")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("ConfirmForgotPassword")
 	]
 
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.USERNAME: username,
-		BODY.PASSWORD: new_password,
-		BODY.CONFIRMATION_CODE: confirmation_code
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.USERNAME: username,
+		Body.PASSWORD: new_password,
+		Body.CONFIRMATION_CODE: confirmation_code
 	}
 
-	return await _client.make_http_post(_endpoint, headers, body)
+	return await _client.post_json(_endpoint, headers, body)
 
 #
 # UpdatePassword
@@ -184,18 +183,18 @@ func confirm_reset_password(username, new_password, confirmation_code, options: 
 func update_password(old_password, new_password, options: Dictionary = {}):
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("UpdatePassword")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("UpdatePassword")
 	]
 
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN],
-		BODY.PREVIOUS_PASSWORD: old_password,
-		BODY.PROPOSED_PASSWORD: new_password
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.ACCESS_TOKEN: _tokens[Token.ACCESS_TOKEN],
+		Body.PREVIOUS_PASSWORD: old_password,
+		Body.PROPOSED_PASSWORD: new_password
 	}
 
-	return await make_authenticated_http_post(_endpoint, headers, body)
+	return await post_json(_endpoint, headers, body)
 
 #
 # UpdateUserAttributes
@@ -204,19 +203,19 @@ func update_password(old_password, new_password, options: Dictionary = {}):
 func update_user_attributes(user_attributes: Dictionary, options: Dictionary = {}):
 	
 	var headers = [
-		AWSAmplifyBase.HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		AWSAmplifyBase.HEADERS.X_AMZ_TARGET("UpdateUserAttributes")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("UpdateUserAttributes")
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN],
-		BODY.USER_ATTRIBUTES: _dictionary_to_array(user_attributes)
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.ACCESS_TOKEN: _tokens[Token.ACCESS_TOKEN],
+		Body.USER_ATTRIBUTES: _dictionary_to_array(user_attributes)
 	}
 
-	var response = await _client.make_http_post(_endpoint, headers, body)
+	var response = await _client.post_json(_endpoint, headers, body)
 	
-	if response.success:
+	if response.status == ResponseStatus.SUCCESS:
 		_user_attributes.merge(user_attributes, true)
 		user_changed.emit(_user_attributes)
 		
@@ -236,18 +235,18 @@ func update_user_attribute(user_attribute_name: String, user_attribute_value, op
 func confirm_user_attribute(attribute_name: String, confirmation_code: String, options: Dictionary = {}):
 	
 	var headers = [
-		AWSAmplifyBase.HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		AWSAmplifyBase.HEADERS.X_AMZ_TARGET("VerifyUserAttribute"),
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("VerifyUserAttribute"),
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN],
-		BODY.ATTRIBUTE_NAME: attribute_name,
-		BODY.CONFIRMATION_CODE: confirmation_code
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.ACCESS_TOKEN: _tokens[Token.ACCESS_TOKEN],
+		Body.ATTRIBUTE_NAME: attribute_name,
+		Body.CONFIRMATION_CODE: confirmation_code
 	}
 
-	return await _client.make_http_post(_endpoint, headers, body)
+	return await _client.post_json(_endpoint, headers, body)
 
 #
 # SendUserAttributeConfirmationCode
@@ -256,17 +255,17 @@ func confirm_user_attribute(attribute_name: String, confirmation_code: String, o
 func send_user_attribute_confirmation_code(attribute_name: String, confirmation_code: String, options: Dictionary = {}):
 	
 	var headers = [
-		AWSAmplifyBase.HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		AWSAmplifyBase.HEADERS.X_AMZ_TARGET("GetUserAttributeVerificationCode"),
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("GetUserAttributeVerificationCode"),
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN],
-		BODY.ATTRIBUTE_NAME: attribute_name
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.ACCESS_TOKEN: _tokens[Token.ACCESS_TOKEN],
+		Body.ATTRIBUTE_NAME: attribute_name
 	}
 
-	return await _client.make_http_post(_endpoint, headers, body)
+	return await _client.post_json(_endpoint, headers, body)
 
 #
 # DeleteUserAttributes
@@ -275,19 +274,19 @@ func send_user_attribute_confirmation_code(attribute_name: String, confirmation_
 func delete_user_attributes(user_attribute_names: Array[String]):
 	
 	var headers = [
-		AWSAmplifyBase.HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		AWSAmplifyBase.HEADERS.X_AMZ_TARGET("UpdateUserAttributes")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("UpdateUserAttributes")
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN],
-		BODY.USER_ATTRIBUTE_NAMES: user_attribute_names
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.ACCESS_TOKEN: _tokens[Token.ACCESS_TOKEN],
+		Body.USER_ATTRIBUTE_NAMES: user_attribute_names
 	}
 
-	var response = await _client.make_http_post(_endpoint, headers, body)
+	var response = await _client.post_json(_endpoint, headers, body)
 	
-	if response.success:
+	if response.status == ResponseStatus.SUCCESS:
 		for user_attribute_name in user_attribute_names:
 			_user_attributes[user_attribute_name] = null
 		user_changed.emit(_user_attributes)
@@ -301,17 +300,18 @@ func delete_user_attributes(user_attribute_names: Array[String]):
 func fetch_user_attributes() :
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("GetUser"),
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("GetUser"),
 	]
 	
 	var body = {
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN]
+		Body.ACCESS_TOKEN: _tokens[Token.ACCESS_TOKEN]
 	}
 
-	var response = await _client.make_http_post(_endpoint, headers, body)
-	if response.success:
-		var attributes = response.response_body[BODY.USER_ATTRIBUTES]
+	var response = await _client.post_json(_endpoint, headers, body)
+	
+	if response.status == ResponseStatus.SUCCESS:
+		var attributes = response.result[Body.USER_ATTRIBUTES]
 		return _array_to_dictionary(attributes)
 	else:	
 		return {}
@@ -334,17 +334,18 @@ func sign_out(global: bool = false):
 func global_sign_out():
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,		
-		HEADERS.X_AMZ_TARGET("GlobalSignOut")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,		
+		Headers.X_AMZ_TARGET("GlobalSignOut")
 	]
 
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN]
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.ACCESS_TOKEN: _tokens[Token.ACCESS_TOKEN]
 	}
 	
-	var response = await _client.make_http_post(_endpoint, headers, body)
-	if response.success:
+	var response = await _client.post_json(_endpoint, headers, body)
+	
+	if response.status == ResponseStatus.SUCCESS:
 		user_signed_out.emit(_user_attributes)
 		_clear_tokens()
 		
@@ -357,20 +358,25 @@ func global_sign_out():
 func revoke_token():
 
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,		
-		HEADERS.X_AMZ_TARGET("RevokeToken")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,		
+		Headers.X_AMZ_TARGET("RevokeToken")
 	]
 
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_ID],
-		BODY.CLIENT_SECRET: _config[CONFIG.CLIENT_SECRET],
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN]
+		Body.CLIENT_ID: _config[Config.CLIENT_ID],
+		Body.TOKEN: _tokens[Token.REFRESH_TOKEN]
 	}
 	
-	var response = await _client.make_http_post(_endpoint, headers, body)
-	if response.success:
+	if _config.has(Config.CLIENT_SECRET):
+		body[Body.CLIENT_SECRET] = _config[Config.CLIENT_SECRET]
+
+	var response = await _client.post_json(_endpoint, headers, body)
+	
+	if response.status == ResponseStatus.SUCCESS:
 		user_signed_out.emit(_user_attributes)
 		_clear_tokens()
+	else:
+		print(response.error)
 		
 	return response
 
@@ -381,23 +387,23 @@ func revoke_token():
 func refresh_token(refresh_token):
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("InitiateAuth")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("InitiateAuth")
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_SECRET],
-		BODY.AUTH_FLOW:"REFRESH_TOKEN_AUTH",
-		BODY.AUTH_PARAMETERS: {
+		Body.CLIENT_ID: _config[Config.CLIENT_SECRET],
+		Body.AUTH_FLOW:"REFRESH_TOKEN_AUTH",
+		Body.AUTH_PARAMETERS: {
 			"REFRESH_TOKEN": refresh_token
 		}
 	}
 	
-	var response = await _client.make_http_post(_endpoint, headers, body)
-	if response.success:
-		var response_body = response.response_body
-		if response_body.has(BODY.AUTHENTICATED_RESULT) and response_body[BODY.AUTHENTICATED_RESULT].has(BODY.ACCESS_TOKEN):
-			var authenticated_result = response_body[BODY.AUTHENTICATED_RESULT]
+	var response = await _client.post_json(_endpoint, headers, body)
+	
+	if response.status == ResponseStatus.SUCCESS:
+		if response.result.has(Body.AUTHENTICATED_RESULT) and response.result[Body.AUTHENTICATED_RESULT].has(Body.ACCESS_TOKEN):
+			var authenticated_result = response.result[Body.AUTHENTICATED_RESULT]
 			_tokens.set_all(authenticated_result)
 			
 	return response
@@ -417,8 +423,8 @@ func get_token(name):
 #
 
 func get_token_expiration_time() -> int:
-	if _tokens.has(TOKEN.ACCESS_TOKEN):
-		return _token_expiration_time(_tokens[TOKEN.ACCESS_TOKEN])
+	if _tokens.has(Token.ACCESS_TOKEN):
+		return _token_expiration_time(_tokens[Token.ACCESS_TOKEN])
 	else:
 		return 0
 
@@ -429,16 +435,16 @@ func get_token_expiration_time() -> int:
 func delete_user():
 	
 	var headers = [
-		HEADERS.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
-		HEADERS.X_AMZ_TARGET("DeleteUser")
+		Headers.CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1,
+		Headers.X_AMZ_TARGET("DeleteUser")
 	]
 	
 	var body = {
-		BODY.CLIENT_ID: _config[CONFIG.CLIENT_SECRET],
-		BODY.ACCESS_TOKEN: _tokens[TOKEN.ACCESS_TOKEN]
+		Body.CLIENT_ID: _config[Config.CLIENT_SECRET],
+		Body.ACCESS_TOKEN: _tokens[Token.ACCESS_TOKEN]
 	}
 	
-	return await _client.make_http_post(_endpoint, headers, body)
+	return await _client.post_json(_endpoint, headers, body)
 
 #
 # GetUserAttribute
@@ -465,7 +471,7 @@ func get_user_attributes(refresh_attributes = false):
 
 func add_user_attributes(user_attributes: Dictionary):
 	var response = await update_user_attributes(user_attributes)
-	if response.success:
+	if response.status == ResponseStatus.SUCCESS:
 		_user_attributes.merge(user_attributes)
 		user_changed.emit(_user_attributes)
 
@@ -475,7 +481,7 @@ func add_user_attributes(user_attributes: Dictionary):
 
 func remove_user_attributes(keys: Array):
 	var response = await delete_user_attributes(keys)
-	if response.success:
+	if response.status == ResponseStatus.SUCCESS:
 		for key in keys:
 			_user_attributes.erase(key)
 		user_changed.emit(_user_attributes)
@@ -486,14 +492,14 @@ func remove_user_attributes(keys: Array):
 
 func refresh_user(refresh_token = false, refresh_user_attributes = false):
 	
-	if _tokens.has(TOKEN.ACCESS_TOKEN):
-		var token_expiration_time = _token_expiration_time(_tokens[TOKEN.ACCESS_TOKEN])
+	if _tokens.has(Token.ACCESS_TOKEN):
+		var token_expiration_time = _token_expiration_time(_tokens[Token.ACCESS_TOKEN])
 		
 		# refresh user access token if user access token has expired
 		if (refresh_token or 
 			(token_expiration_time < Time.get_unix_time_from_system() 
-			and _tokens[TOKEN.REFRESH_TOKEN])):
-			var response = await refresh_token(_tokens[TOKEN.REFRESH_TOKEN])
+			and _tokens[Token.REFRESH_TOKEN])):
+			var response = await refresh_token(_tokens[Token.REFRESH_TOKEN])
 			if not response.success:
 				_clear_tokens()
 		
@@ -514,30 +520,49 @@ func refresh_user(refresh_token = false, refresh_user_attributes = false):
 #
 
 func get_username_attribute():
-	if _config.has(CONFIG.USERNAME_ATTRIBUTES):
-		var username_attributes = _config[CONFIG.USERNAME_ATTRIBUTES]
+	if _config.has(Config.USERNAME_ATTRIBUTES):
+		var username_attributes = _config[Config.USERNAME_ATTRIBUTES]
 		return username_attributes[0]
 	else:
-		return USER_ATTRIBUTES.EMAIL
+		return UserAttributes.EMAIL
 
-func make_authenticated_http_get(endpoint, headers, body):
-	return await make_authenticated_http_request(endpoint, headers, HTTPClient.METHOD_GET , body)
+func get_json(endpoint: String, headers: Array, json_body: Dictionary):
+	return await send_json(endpoint, headers, HTTPClient.METHOD_GET , json_body)
 
-func make_authenticated_http_post(endpoint, headers, body):
-	return await make_authenticated_http_request(endpoint, headers, HTTPClient.METHOD_POST, body)
+func post_json(endpoint: String, headers: Array, json_body: Dictionary):
+	return await send_json(endpoint, headers, HTTPClient.METHOD_POST, json_body)
 
-func make_authenticated_http_put(endpoint, headers, body):
-	return await make_authenticated_http_request(endpoint, headers, HTTPClient.METHOD_PUT, body)
+func put_json(endpoint: String, headers: Array, json_body: Dictionary):
+	return await send_json(endpoint, headers, HTTPClient.METHOD_PUT, json_body)
 
-func make_authenticated_http_delete(endpoint, headers, body):
-	return await make_authenticated_http_request(endpoint, headers, HTTPClient.METHOD_DELETE, body)
+func delete_json(endpoint: String, headers: Array, body: Dictionary):
+	return await send_json(endpoint, headers, HTTPClient.METHOD_DELETE, body)
 
-func make_authenticated_http_request(endpoint, headers, method, body):
+func send_json(endpoint: String, headers: Array, method: HTTPClient.Method, json_body: Dictionary):
 	# automatically refresh access token if expired
 	refresh_user()
 	# append access token to the authorization bearer
-	headers.append(HEADERS.AUTHORIZATION_BEARER(_tokens[TOKEN.ACCESS_TOKEN]))
-	return await _client.make_http_request(endpoint, headers, method, body)
+	headers.append(Headers.AUTHORIZATION_BEARER(_tokens[Token.ACCESS_TOKEN]))
+	return await _client.send_json(endpoint, headers, method, json_body)
+
+func get_(endpoint: String, headers: Array, body: String):
+	return await send(endpoint, headers, HTTPClient.METHOD_GET , body)
+
+func post(endpoint: String, headers: Array, body: String):
+	return await send(endpoint, headers, HTTPClient.METHOD_POST, body)
+
+func put(endpoint: String, headers: Array, body: String):
+	return await send(endpoint, headers, HTTPClient.METHOD_PUT, body)
+
+func delete(endpoint: String, headers: Array, body: String):
+	return await send(endpoint, headers, HTTPClient.METHOD_DELETE, body)
+
+func send(endpoint: String, headers: Array, method: HTTPClient.Method, body: String):
+	# automatically refresh access token if expired
+	refresh_user()
+	# append access token to the authorization bearer
+	headers.append(Headers.AUTHORIZATION_BEARER(_tokens[Token.ACCESS_TOKEN]))
+	return await _client.send(endpoint, headers, method, body)
 
 var _client: AWSAmplifyClient
 var _config: Dictionary
@@ -548,7 +573,7 @@ var _user_attributes: AuthStore
 func _init(client: AWSAmplifyClient, config: Dictionary) -> void:
 	_client = client
 	_config = config
-	_endpoint = "https://cognito-idp." + config[CONFIG.REGION] + ".amazonaws.com/"
+	_endpoint = "https://cognito-idp." + config[Config.REGION] + ".amazonaws.com/"
 	_tokens = AuthMemoryStore.new()
 	_user_attributes = AuthMemoryStore.new()
 
@@ -562,7 +587,7 @@ func _clear_user_attributes():
 
 func _token_expiration_time(access_token):
 	var decoded_token = _decode_jwt(access_token)
-	var token_payload = decoded_token[JWT.PAYLOAD]
+	var token_payload = decoded_token[Jwt.PAYLOAD]
 	return token_payload.exp
 
 func _decode_jwt(token):
@@ -576,8 +601,8 @@ func _decode_jwt(token):
 	var payload = _parse_json(payload_string)
 	
 	return {
-		JWT.HEADER: header, 
-		JWT.PAYLOAD: payload
+		Jwt.HEADER: header, 
+		Jwt.PAYLOAD: payload
 	}
 	
 func _base64URL_decode(input: String) -> PackedByteArray:
@@ -670,24 +695,24 @@ class AuthMemoryStore extends AuthStore:
 	var _dict = {}
 	
 #
-# Constants and types
+# Constants and Types
 #
 
-class CONFIG:
+class Config:
 	const REGION = "aws_region"
 	const CLIENT_ID = "user_pool_client_id"
 	const CLIENT_SECRET = "user_pool_client_secret"
 	const USERNAME_ATTRIBUTES = "username_attributes"
 	const USER_VERIFICATION_TYPE = "user_verification_types"
 
-class TOKEN:
+class Token:
 	const ACCESS_TOKEN = "AccessToken"
 	const EXPIRES_IN = "AccessTokenExpirationTime"
 	const ID_TOKEN = "IdToken"
 	const REFRESH_TOKEN = "RefreshToken"
 	const TOKEN_TYPE = "TokenType"
 
-class JWT:
+class Jwt:
 	const HEADER = "header"
 	const PAYLOAD = "payload"
 	const VERIFIED_SIGNATURE = "verified_signature"
@@ -696,21 +721,52 @@ class AuthOptions:
 	const USER_ATTRIBUTES = "userAttributes"
 	const CLIENT_METADATA = "clientMetadata"
 
-enum AuthError {
-	NO_CONFIG,
-	MISSION_AUTH_CONFIG,
-	EMPTY_USERNAME,
-	INVALID_USERNAME,
-	EMPTY_PASSWORD,
-	EMPTY_CODE,
-	SIGNUP_ERROR,
-	NO_MFA,
-	INVALID_MFA,
-	EMPTY_CHALLENGE_RESPONSE,
-	NO_USER_SESSION,
-	DEFAULT,
-	DEVICE_CONFIG,
-	NETWORK_ERROR,
-	AUTO_SIGNIN_ERROR,
-	OAUTH_SIGN_IN_ERROR
-}
+const ResponseStatus = AWSAmplifyClient.ResponseStatus
+
+class Headers:
+	const CONTENT_TYPE_APPLICATION_X_AMZ_JSON_1_1 = "Content-Type: application/x-amz-json-1.1"
+	static func X_AMZ_TARGET(target) -> String:
+		return "X-Amz-Target: AWSCognitoIdentityProviderService." + target
+	static func AUTHORIZATION_BEARER(access_token) -> String:
+		return "Authorization: Bearer " + access_token
+
+class Body:
+	const ACCESS_TOKEN = "AccessToken"
+	const ATTRIBUTE_NAME = "AttributeName"
+	const AUTH_FLOW = "AuthFlow"
+	const AUTH_PARAMETERS = "AuthParameters"
+	const AUTHENTICATED_RESULT = "AuthenticationResult"
+	const CLIENT_ID = "ClientId"
+	const CLIENT_SECRET = "ClientSecret"
+	const CLIENT_METADATA = "ClientMetadata"
+	const CONFIRMATION_CODE = "ConfirmationCode"
+	const PASSWORD = "Password"
+	const PREVIOUS_PASSWORD = "PreviousPassword"
+	const PROPOSED_PASSWORD = "ProposedPassword"
+	const REFRESH_TOKEN = "RefreshToken"
+	const TOKEN = "Token"
+	const USERNAME = "Username"
+	const USER_ATTRIBUTES = "UserAttributes"
+	const USER_ATTRIBUTE_NAMES = "UserAttributeNames"
+
+class UserAttributes:
+	static func CUSTOM(name: String):
+		return "custom:" + name
+	const NAME = "name"
+	const FAMILY_NAME = "family_name"
+	const GIVEN_NAME = "given_name"	
+	const MIDDLE_NAME = "middle_name"
+	const NICKNAME = "nickname"
+	const PREFERRED_NAME = "preferred_username"
+	const PROFILE = "profile"
+	const PICTURE = "picture"
+	const WEBSITE = "website"
+	const GENDER = "gender"
+	const BIRTHDATE = "birthdate"
+	const ZONEINFO = "zoneinfo"
+	const LOCALE = "locale"
+	const UPDATED_AT = "updated_at"
+	const ADDRESS = "address"
+	const EMAIL = "email"
+	const PHONE_NUMBER = "phone_number"
+	const SUB = "sub"
