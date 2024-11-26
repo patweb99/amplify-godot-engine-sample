@@ -8,7 +8,7 @@ It uses a sample game named [Squash The Creeps](https://github.com/godotengine/g
 
 This reposotory contains several samples organized in git branches.
 
-[](https://github.com/aws-samples/amplify-godot-engine-sample/blob/feature/plugin_0_3_0/branches.drawio.png)
+![](branches.drawio.png)
 
 Each branch contains a 'byte size' deployable sample to showcase a specific feature offered by AWS Amplify or AWS CDK extensions.
 
