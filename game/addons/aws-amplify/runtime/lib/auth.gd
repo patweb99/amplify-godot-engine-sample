@@ -665,6 +665,7 @@ class AuthStore:
 	func _not_implemented_yet(value = null):
 		assert(false, "Not Implemented Yet!")
 		return value
+		
 	const _empty_array = []
 	const _empty_dictionary = {}
 
@@ -758,7 +759,7 @@ class UserAttributes:
 		return "custom:" + name
 	const NAME = "name"
 	const FAMILY_NAME = "family_name"
-	const GIVEN_NAME = "given_name"	
+	const GIVEN_NAME = "given_name"
 	const MIDDLE_NAME = "middle_name"
 	const NICKNAME = "nickname"
 	const PREFERRED_NAME = "preferred_username"
