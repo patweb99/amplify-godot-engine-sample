@@ -83,8 +83,8 @@ fi
 
 # Create export directory and remove any existing content
 PROJECT_PRESET_EXPORT_DIR="$PROJECT_DIR/$PRESET_EXPORT_DIR"
+rm -rf "$PROJECT_PRESET_EXPORT_DIR/*"
 mkdir -p "$PROJECT_PRESET_EXPORT_DIR"
-rm -rf "$PROJECT_PRESET_EXPORT_DIR/"*
 
 # Export the project
 echo "Exporting $PRESET_NAME to $PRESET_EXPORT_PATH"
