@@ -6,6 +6,10 @@ It uses a sample game named [Squash The Creeps](https://github.com/godotengine/g
 
 _Note: “The sample code; software libraries; command line tools; proofs of concept; templates; or other related technology (including any of the foregoing that are provided by our personnel) is provided to you as AWS Content under the AWS Customer Agreement, or the relevant written agreement between you and AWS (whichever applies). You should not use this AWS Content in your production accounts, or on production or other critical data. You are responsible for testing, securing, and optimizing the AWS Content, such as sample code, as appropriate for production grade use based on your specific quality control practices and standards. Deploying AWS Content may incur AWS charges for creating or using AWS chargeable resources, such as running Amazon EC2 instances or using Amazon S3 storage.”_
 
+## Quickstart
+
+If you need more detailed explanations you can use our [quicktstart](https://github.com/aws-samples/amplify-godot-engine/wiki/Create-a-New-Game) guidance or explore [labs](https://github.com/aws-samples/amplify-godot-engine/wiki) from the wiki.
+
 ## Organization
 
 This reposotory contains several samples organized in git branches.
