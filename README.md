@@ -1,5 +1,10 @@
 ## AWS Amplify for Godot Engine - Sample
 
+[![GitHub release](https://img.shields.io/github/release/aws-samples/amplify-godot-engine-sample)](https://github.com//aws-samples/amplify-godot-engine-sample/releases)
+[![Open Bugs](https://img.shields.io/github/issues/aws-samples/amplify-godot-engine-sample/bug?color=d73a4a&label=bugs)](https://github.com/aws-samples/amplify-godot-engine-sample/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Feature Requests](https://img.shields.io/github/issues/aws-samples/amplify-godot-engine-sample/feature-request?color=ff9001&label=feature%20requests)](https://github.com/aws-samples/amplify-godot-engine-sample/issues?q=is%3Aissue+label%3Afeature-request+is%3Aopen)
+[![Closed Issues](https://img.shields.io/github/issues-closed/aws-samples/amplify-godot-engine-sample?color=%2325CC00&label=issues%20closed)](https://github.com/aws-samples/amplify-godot-engine-sample/issues?q=is%3Aissue+is%3Aclosed+)
+
 This project contains an AWS Amplify project sample to create, build, export and deploy Godot Engine projects on AWS.
 
 It uses a sample game named [Squash The Creeps](https://github.com/godotengine/godot-demo-projects/tree/master/3d/squash_the_creeps) from the [Godot Demo Projects](https://github.com/godotengine/godot-demo-projects). You can learn how to build this game from scratch in the [Godot Documentation](https://docs.godotengine.org) in the [Your first 3D game](https://docs.godotengine.org/en/stable/getting_started/first_3d_game/index.html) section.
@@ -8,7 +13,7 @@ _Note: “The sample code; software libraries; command line tools; proofs of con
 
 ## Quickstart
 
-If you need more detailed explanations you can use our [quicktstart](https://github.com/aws-samples/amplify-godot-engine/wiki/Create-a-New-Game) guidance or explore [labs](https://github.com/aws-samples/amplify-godot-engine/wiki) from the wiki.
+If you need step by step tutorials you can use our [quicktstarts](https://github.com/aws-samples/amplify-godot-engine/wiki/Create-a-New-Game) or explore [labs](https://github.com/aws-samples/amplify-godot-engine/wiki) on the wiki.
 
 ## Organization
 
