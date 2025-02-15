@@ -1,9 +1,5 @@
 extends CharacterBody3D
 
-class USER_ATTRIBUTES:
-	const NAME = "preferred_username"
-	const COLOR = "custom:color"
-		
 signal hit
 
 ## How fast the player moves in meters per second.
@@ -15,18 +11,7 @@ signal hit
 ## The downward acceleration when in the air, in meters per second.
 @export var fall_acceleration = 75
 
-@onready var character: Character = %Character
-@onready var player_name: Label3D = %PlayerName
 
-func _ready() -> void:
-	aws_amplify.auth.user_changed.connect(_on_user_changed)
-	
-	var user_attributes = aws_amplify.auth.get_user_attributes()
-	_on_user_changed(user_attributes)
-	
-func _exit_tree() -> void:
-	aws_amplify.auth.user_changed.disconnect(_on_user_changed)
-	
 func _physics_process(delta):
 	var direction = Vector3.ZERO
 	if Input.is_action_pressed("move_right"):
@@ -87,9 +72,3 @@ func die():
 
 func _on_MobDetector_body_entered(_body):
 	die()
-	
-func _on_user_changed(user_attributes):
-	if user_attributes.has(USER_ATTRIBUTES.NAME):
-		player_name.text = user_attributes[USER_ATTRIBUTES.NAME]
-	if user_attributes.has(USER_ATTRIBUTES.COLOR):
-		character.set_body_color(Color(user_attributes[USER_ATTRIBUTES.COLOR]))
